@@ -1,0 +1,360 @@
+/**
+ * 通用样式类
+ */
+@import './variables.scss';
+
+// 布局类
+.flex {
+  display: flex;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.flex-wrap {
+  flex-wrap: wrap;
+}
+
+.flex-1 {
+  flex: 1;
+}
+
+// 文本对齐
+.text-left {
+  text-align: left;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+// 文本颜色
+.text-primary {
+  color: $text-primary;
+}
+
+.text-regular {
+  color: $text-regular;
+}
+
+.text-secondary {
+  color: $text-secondary;
+}
+
+.text-placeholder {
+  color: $text-placeholder;
+}
+
+// 主题颜色
+.color-primary {
+  color: $primary-color;
+}
+
+.color-success {
+  color: $success-color;
+}
+
+.color-warning {
+  color: $warning-color;
+}
+
+.color-danger {
+  color: $danger-color;
+}
+
+.color-info {
+  color: $info-color;
+}
+
+// 字体大小
+.text-xs {
+  font-size: $font-size-extra-small;
+}
+
+.text-sm {
+  font-size: $font-size-small;
+}
+
+.text-base {
+  font-size: $font-size-base;
+}
+
+.text-md {
+  font-size: $font-size-medium;
+}
+
+.text-lg {
+  font-size: $font-size-large;
+}
+
+.text-xl {
+  font-size: $font-size-extra-large;
+}
+
+// 字体粗细
+.font-normal {
+  font-weight: normal;
+}
+
+.font-medium {
+  font-weight: 500;
+}
+
+.font-bold {
+  font-weight: bold;
+}
+
+// 间距
+.m-0 {
+  margin: 0;
+}
+.mt-0 {
+  margin-top: 0;
+}
+.mb-0 {
+  margin-bottom: 0;
+}
+.ml-0 {
+  margin-left: 0;
+}
+.mr-0 {
+  margin-right: 0;
+}
+
+.m-1 {
+  margin: $spacing-mini;
+}
+.mt-1 {
+  margin-top: $spacing-mini;
+}
+.mb-1 {
+  margin-bottom: $spacing-mini;
+}
+.ml-1 {
+  margin-left: $spacing-mini;
+}
+.mr-1 {
+  margin-right: $spacing-mini;
+}
+
+.m-2 {
+  margin: $spacing-small;
+}
+.mt-2 {
+  margin-top: $spacing-small;
+}
+.mb-2 {
+  margin-bottom: $spacing-small;
+}
+.ml-2 {
+  margin-left: $spacing-small;
+}
+.mr-2 {
+  margin-right: $spacing-small;
+}
+
+.m-3 {
+  margin: $spacing-base;
+}
+.mt-3 {
+  margin-top: $spacing-base;
+}
+.mb-3 {
+  margin-bottom: $spacing-base;
+}
+.ml-3 {
+  margin-left: $spacing-base;
+}
+.mr-3 {
+  margin-right: $spacing-base;
+}
+
+.m-4 {
+  margin: $spacing-large;
+}
+.mt-4 {
+  margin-top: $spacing-large;
+}
+.mb-4 {
+  margin-bottom: $spacing-large;
+}
+.ml-4 {
+  margin-left: $spacing-large;
+}
+.mr-4 {
+  margin-right: $spacing-large;
+}
+
+.p-0 {
+  padding: 0;
+}
+.pt-0 {
+  padding-top: 0;
+}
+.pb-0 {
+  padding-bottom: 0;
+}
+.pl-0 {
+  padding-left: 0;
+}
+.pr-0 {
+  padding-right: 0;
+}
+
+.p-1 {
+  padding: $spacing-mini;
+}
+.pt-1 {
+  padding-top: $spacing-mini;
+}
+.pb-1 {
+  padding-bottom: $spacing-mini;
+}
+.pl-1 {
+  padding-left: $spacing-mini;
+}
+.pr-1 {
+  padding-right: $spacing-mini;
+}
+
+.p-2 {
+  padding: $spacing-small;
+}
+.pt-2 {
+  padding-top: $spacing-small;
+}
+.pb-2 {
+  padding-bottom: $spacing-small;
+}
+.pl-2 {
+  padding-left: $spacing-small;
+}
+.pr-2 {
+  padding-right: $spacing-small;
+}
+
+.p-3 {
+  padding: $spacing-base;
+}
+.pt-3 {
+  padding-top: $spacing-base;
+}
+.pb-3 {
+  padding-bottom: $spacing-base;
+}
+.pl-3 {
+  padding-left: $spacing-base;
+}
+.pr-3 {
+  padding-right: $spacing-base;
+}
+
+.p-4 {
+  padding: $spacing-large;
+}
+.pt-4 {
+  padding-top: $spacing-large;
+}
+.pb-4 {
+  padding-bottom: $spacing-large;
+}
+.pl-4 {
+  padding-left: $spacing-large;
+}
+.pr-4 {
+  padding-right: $spacing-large;
+}
+
+// 圆角
+.rounded {
+  border-radius: $border-radius-base;
+}
+
+.rounded-sm {
+  border-radius: $border-radius-small;
+}
+
+.rounded-lg {
+  border-radius: $border-radius-large;
+}
+
+.rounded-circle {
+  border-radius: $border-radius-circle;
+}
+
+// 阴影
+.shadow {
+  box-shadow: $box-shadow-base;
+}
+
+.shadow-sm {
+  box-shadow: $box-shadow-light;
+}
+
+.shadow-lg {
+  box-shadow: $box-shadow-dark;
+}
+
+// 卡片
+.card {
+  background-color: $background-white;
+  border-radius: $border-radius-base;
+  box-shadow: $box-shadow-light;
+  padding: $spacing-base;
+}
+
+// 页面容器
+.page-container {
+  width: 100%;
+  max-width: $container-width;
+  margin: 0 auto;
+  padding: $spacing-base;
+}
+
+// 渐变背景
+.gradient-primary {
+  background: $gradient-primary;
+}
+
+.gradient-success {
+  background: $gradient-success;
+}
+
+.gradient-warning {
+  background: $gradient-warning;
+}
+
+.gradient-danger {
+  background: $gradient-danger;
+}
+
+// 过渡动画
+.transition {
+  transition: $transition-base;
+}
+
+.transition-fast {
+  transition: $transition-fast;
+}
+
+.transition-slow {
+  transition: $transition-slow;
+}

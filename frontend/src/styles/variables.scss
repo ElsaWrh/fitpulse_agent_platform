@@ -1,0 +1,76 @@
+/**
+ * 全局 SCSS 变量
+ */
+
+// 颜色主题
+$primary-color: #667eea;
+$secondary-color: #764ba2;
+$success-color: #67c23a;
+$warning-color: #e6a23c;
+$danger-color: #f56c6c;
+$info-color: #909399;
+
+// 文本颜色
+$text-primary: #303133;
+$text-regular: #606266;
+$text-secondary: #909399;
+$text-placeholder: #c0c4cc;
+
+// 边框颜色
+$border-base: #dcdfe6;
+$border-light: #e4e7ed;
+$border-lighter: #ebeef5;
+$border-extra-light: #f2f6fc;
+
+// 背景颜色
+$background-base: #f5f7fa;
+$background-light: #fafafa;
+$background-white: #ffffff;
+
+// 字体大小
+$font-size-extra-large: 20px;
+$font-size-large: 18px;
+$font-size-medium: 16px;
+$font-size-base: 14px;
+$font-size-small: 13px;
+$font-size-extra-small: 12px;
+
+// 间距
+$spacing-base: 16px;
+$spacing-large: 24px;
+$spacing-small: 12px;
+$spacing-mini: 8px;
+
+// 圆角
+$border-radius-base: 4px;
+$border-radius-small: 2px;
+$border-radius-large: 8px;
+$border-radius-circle: 50%;
+
+// 阴影
+$box-shadow-base: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+$box-shadow-light: 0 2px 8px 0 rgba(0, 0, 0, 0.06);
+$box-shadow-dark: 0 4px 16px 0 rgba(0, 0, 0, 0.12);
+
+// 过渡
+$transition-base: all 0.3s ease;
+$transition-fast: all 0.2s ease;
+$transition-slow: all 0.5s ease;
+
+// 层级
+$z-index-normal: 1;
+$z-index-top: 1000;
+$z-index-popper: 2000;
+$z-index-dialog: 3000;
+$z-index-message: 4000;
+
+// 布局宽度
+$container-width: 1200px;
+$sidebar-width: 240px;
+$header-height: 60px;
+
+// 渐变色
+$gradient-primary: linear-gradient(135deg, $primary-color 0%, $secondary-color 100%);
+$gradient-success: linear-gradient(135deg, #67c23a 0%, #85ce61 100%);
+$gradient-warning: linear-gradient(135deg, #e6a23c 0%, #ebb563 100%);
+$gradient-danger: linear-gradient(135deg, #f56c6c 0%, #f78989 100%);
