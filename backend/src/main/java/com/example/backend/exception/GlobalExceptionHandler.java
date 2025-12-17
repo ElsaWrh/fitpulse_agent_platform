@@ -58,6 +58,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public Result<?> handleException(Exception e) {
         log.error("系统异常: ", e);
-        return Result.error("系统繁忙,请稍后再试");
+        // 开发环境返回详细错误信息，生产环境应改为通用信息
+        String errorDetail = e.getMessage();
+        if (e.getCause() != null) {
+            errorDetail += " | Cause: " + e.getCause().getMessage();
+        }
+        return Result.error("系统异常: " + errorDetail);
     }
 }

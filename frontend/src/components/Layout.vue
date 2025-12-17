@@ -27,7 +27,15 @@
           <el-icon><Document /></el-icon>
           <template #title>健康档案</template>
         </el-menu-item>
-        <el-menu-item index="/chat">
+        <el-menu-item index="/agents">
+          <el-icon><Avatar /></el-icon>
+          <template #title>智能体</template>
+        </el-menu-item>
+        <el-menu-item index="/knowledge">
+          <el-icon><Reading /></el-icon>
+          <template #title>知识库</template>
+        </el-menu-item>
+        <el-menu-item index="/agent/chat/health_assistant">
           <el-icon><ChatDotRound /></el-icon>
           <template #title>AI 助手</template>
         </el-menu-item>
@@ -102,7 +110,9 @@ import {
   SwitchButton, 
   ArrowDown,
   Expand,
-  Fold
+  Fold,
+  Avatar,
+  Reading
 } from '@element-plus/icons-vue'
 
 const router = useRouter()
@@ -116,8 +126,23 @@ const pageTitle = computed(() => {
   const titles = {
     '/': '首页',
     '/health': '健康档案',
-    '/chat': 'AI 健康助手',
+    '/agents': '智能体中心',
+    '/knowledge': '知识库',
     '/profile': '个人设置'
+  }
+  // 智能体编辑页面特殊处理
+  if (route.path.startsWith('/agents/')) {
+    return '智能体编辑'
+  }
+  // 智能体聊天页面特殊处理
+  if (route.path.startsWith('/agent/chat/')) {
+    const agentNames = {
+      'health_assistant': 'AI 健康助手',
+      'diet_assistant': '饮食营养顾问',
+      'sleep_assistant': '睡眠改善顾问'
+    }
+    const agentId = route.params.agentId
+    return agentNames[agentId] || 'AI 助手'
   }
   return titles[route.path] || 'FitPulse'
 })
@@ -145,8 +170,8 @@ const handleCommand = async (command) => {
 .layout-container {
   display: flex;
   min-height: 100vh;
-  width: 100vw;
-  overflow: hidden;
+  width: 100%;
+  position: relative;
 }
 
 /* 左侧边栏 */
@@ -299,14 +324,13 @@ const handleCommand = async (command) => {
   min-height: 100vh;
   background: #f0f2f5;
   transition: margin-left 0.3s ease;
-  
-  .sidebar.collapsed ~ & {
-    margin-left: 72px;
-  }
+  width: calc(100% - 240px);
 }
 
+.sidebar.collapsed ~ .main-wrapper,
 .sidebar.collapsed + .main-wrapper {
   margin-left: 72px;
+  width: calc(100% - 72px);
 }
 
 /* 顶部栏 */
@@ -385,6 +409,8 @@ const handleCommand = async (command) => {
   flex: 1;
   padding: 24px 32px;
   overflow-y: auto;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* 响应式适配 */
@@ -424,6 +450,7 @@ const handleCommand = async (command) => {
   
   .main-wrapper {
     margin-left: 72px;
+    width: calc(100% - 72px);
   }
   
   .main-content {
@@ -433,16 +460,12 @@ const handleCommand = async (command) => {
 
 @media (max-width: 768px) {
   .sidebar {
-    width: 0;
     transform: translateX(-100%);
-    
-    &.collapsed {
-      width: 0;
-    }
   }
   
   .main-wrapper {
     margin-left: 0;
+    width: 100%;
   }
   
   .top-header {

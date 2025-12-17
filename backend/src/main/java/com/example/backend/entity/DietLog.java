@@ -22,6 +22,16 @@ public class DietLog {
 
     private String mealType;
 
+    /**
+     * 图片 URL
+     */
+    private String imageUrl;
+
+    /**
+     * 识别结果(JSON 格式)
+     */
+    private String recognitionResult;
+
     private Integer calories;
 
     private Integer protein;

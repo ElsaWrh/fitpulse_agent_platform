@@ -197,6 +197,8 @@ onMounted(async () => {
 
 /* 欢迎横幅 */
 .welcome-banner {
+  width: 100%;
+  box-sizing: border-box;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-radius: 20px;
   padding: 40px 48px;
@@ -256,6 +258,8 @@ onMounted(async () => {
 
 /* 统计数据 */
 .stats-section {
+  width: 100%;
+  box-sizing: border-box;
   margin-bottom: 40px;
   
   .stats-grid {
@@ -312,6 +316,8 @@ onMounted(async () => {
 
 /* 功能卡片 */
 .features-section {
+  width: 100%;
+  box-sizing: border-box;
   margin-bottom: 40px;
   
   .section-title {
@@ -404,6 +410,9 @@ onMounted(async () => {
 
 /* 健康提示 */
 .tips-section {
+  width: 100%;
+  box-sizing: border-box;
+  
   .section-title {
     font-size: 20px;
     font-weight: 600;

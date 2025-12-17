@@ -41,6 +41,26 @@ const router = createRouter({
           path: 'chat',
           name: 'chat',
           component: () => import('@/views/ChatView.vue')
+        },
+        {
+          path: 'agents',
+          name: 'agents',
+          component: () => import('@/views/agent/AgentListPage.vue')
+        },
+        {
+          path: 'agents/:id',
+          name: 'agent-edit',
+          component: () => import('@/views/agent/AgentEditPage.vue')
+        },
+        {
+          path: 'agent/chat/:agentId',
+          name: 'agent-chat',
+          component: () => import('@/views/agent/AgentChatPage.vue')
+        },
+        {
+          path: 'knowledge',
+          name: 'knowledge',
+          component: () => import('@/views/kb/KnowledgePage.vue')
         }
       ]
     }

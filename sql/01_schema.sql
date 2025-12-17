@@ -1,6 +1,7 @@
 -- ==========================================
--- FitPulse 数据库初始化脚本
--- 创建时间: 2025-12-05
+-- FitPulse 数据库表结构定义
+-- Schema Definition (DDL)
+-- 创建时间: 2025-12-17
 -- 数据库编码: UTF-8 (utf8mb4)
 -- ==========================================
 
@@ -15,7 +16,6 @@ SET character_set_server = utf8mb4;
 SET collation_connection = utf8mb4_unicode_ci;
 SET collation_database = utf8mb4_unicode_ci;
 SET collation_server = utf8mb4_unicode_ci;
-
 
 -- 创建数据库(如果不存在)
 CREATE DATABASE IF NOT EXISTS `fitpulse_db` 
@@ -248,7 +248,7 @@ CREATE TABLE IF NOT EXISTS `llm_provider` (
   `name` VARCHAR(100) NOT NULL COMMENT '提供商名称',
   `api_base_url` VARCHAR(500) COMMENT 'API基础URL',
   `api_key` VARCHAR(500) COMMENT 'API密钥',
-  `provider_type` VARCHAR(50) DEFAULT 'OPENAI' COMMENT '提供商类型: OPENAI/AZURE/CUSTOM',
+  `provider_type` VARCHAR(50) DEFAULT 'OPENAI' COMMENT '提供商类型: OPENAI/AZURE/DASHSCOPE/CUSTOM',
   `status` VARCHAR(20) DEFAULT 'ENABLED' COMMENT '状态: ENABLED/DISABLED',
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
@@ -279,29 +279,9 @@ CREATE TABLE IF NOT EXISTS `llm_model` (
 SET FOREIGN_KEY_CHECKS = 1;
 
 -- ==========================================
--- 初始数据插入
+-- 表结构创建完成
 -- ==========================================
-
--- 插入默认LLM提供商
-INSERT INTO `llm_provider` (`name`, `api_base_url`, `provider_type`, `status`) 
-VALUES ('OpenAI', 'https://api.openai.com/v1', 'OPENAI', 'ENABLED')
-ON DUPLICATE KEY UPDATE `updated_at` = CURRENT_TIMESTAMP;
-
--- 插入默认LLM模型
-INSERT INTO `llm_model` (`provider_id`, `model_name`, `model_type`, `display_name`, `description`, `is_default`, `status`)
-VALUES (1, 'gpt-4o', 'MULTIMODAL', 'GPT-4o', 'OpenAI最新多模态模型,支持文本和图像输入', 1, 'ENABLED')
-ON DUPLICATE KEY UPDATE `updated_at` = CURRENT_TIMESTAMP;
-
--- 插入默认智能体
-INSERT INTO `agent` (`name`, `category`, `description`, `visibility`, `status`, `created_by`, `usage_count`)
-VALUES ('减脂教练', 'FAT_LOSS_COACH', '专业的减脂健身教练，帮助您制定科学的减脂计划，提供饮食和运动建议', 'PUBLIC', 'APPROVED', NULL, 0)
-ON DUPLICATE KEY UPDATE `updated_at` = CURRENT_TIMESTAMP;
-
--- 插入默认智能体配置
-INSERT INTO `agent_config` (`agent_id`, `system_prompt`, `language_style`, `can_read_profile`, `can_read_workouts`, `can_read_diet_logs`, `llm_model_id`)
-VALUES (1, '你是一位专业的减脂健身教练，擅长为用户制定个性化的减脂方案。你需要根据用户的健康档案、运动记录和饮食情况，给出科学、实用的建议。请用鼓励和积极的语气与用户交流，帮助他们建立健康的生活方式。', 'ENCOURAGING', 1, 1, 1, 1)
-ON DUPLICATE KEY UPDATE `updated_at` = CURRENT_TIMESTAMP;
-
--- ==========================================
--- 数据库初始化完成
--- ==========================================
+SELECT '✅ 数据库表结构创建完成!' as status;
+SELECT CONCAT('数据库: fitpulse_db') as info;
+SELECT CONCAT('表数量: 13') as info;
+SELECT '请执行 02_init_data.sql 插入初始配置数据' as next_step;
