@@ -151,21 +151,34 @@
                 <el-option
                   v-for="model in llmModels"
                   :key="model.id"
-                  :label="model.modelName"
+                  :label="model.displayName || model.modelName"
                   :value="model.id"
                 >
                   <div class="model-option">
-                    <span class="model-name">{{ model.modelName }}</span>
+                    <span class="model-name">{{ model.displayName || model.modelName }}</span>
+                    <el-tag v-if="model.isDefault" size="small" type="success">默认</el-tag>
                     <el-tag size="small" type="info">{{ model.modelType }}</el-tag>
                   </div>
                 </el-option>
               </el-select>
+              <div class="form-tip" v-if="llmModels.length === 0">
+                暂无可用模型，请先在<router-link to="/profile">个人设置</router-link>中配置 LLM 提供商
+              </div>
             </el-form-item>
 
             <div v-if="selectedModel" class="model-info">
               <el-descriptions :column="2" border size="small">
-                <el-descriptions-item label="模型代码">{{ selectedModel.modelCode }}</el-descriptions-item>
+                <el-descriptions-item label="模型名称">{{ selectedModel.modelName }}</el-descriptions-item>
+                <el-descriptions-item label="显示名称">{{ selectedModel.displayName }}</el-descriptions-item>
                 <el-descriptions-item label="类型">{{ selectedModel.modelType }}</el-descriptions-item>
+                <el-descriptions-item label="状态">
+                  <el-tag :type="selectedModel.status === 'ENABLED' ? 'success' : 'info'" size="small">
+                    {{ selectedModel.status === 'ENABLED' ? '已启用' : '已禁用' }}
+                  </el-tag>
+                </el-descriptions-item>
+                <el-descriptions-item v-if="selectedModel.description" label="描述" :span="2">
+                  {{ selectedModel.description }}
+                </el-descriptions-item>
               </el-descriptions>
             </div>
           </el-card>
@@ -311,9 +324,9 @@ import {
   getAgentConfig,
   createAgent,
   updateAgent,
-  updateAgentConfig,
-  getLLMModels
+  updateAgentConfig
 } from '@/api/agent'
+import { getLLMModels } from '@/api/llm'
 import { getKBCategories } from '@/api/knowledge'
 import { sendMessageAPI } from '@/api/chat'
 
@@ -389,7 +402,7 @@ const previewMessages = ref([
   {
     id: 1,
     role: 'assistant',
-    content: '你好!我是你的健康助手,有什么可以帮助你的吗?'
+    content: '您好！我是您的智能助手，很高兴为您服务。有什么可以帮助您的吗？'
   }
 ])
 const previewInput = ref('')
@@ -403,11 +416,13 @@ const loadPageData = async () => {
   try {
     // 加载 LLM 模型列表
     const modelsRes = await getLLMModels()
-    llmModels.value = modelsRes.data || []
+    // request.js响应拦截器已经返回了res.data，所以modelsRes就是数组
+    llmModels.value = Array.isArray(modelsRes) ? modelsRes : (modelsRes?.data || modelsRes || [])
+    console.log('✅ 加载 LLM 模型列表:', llmModels.value)
 
     // 加载知识库分类
     const kbRes = await getKBCategories()
-    kbCategories.value = kbRes.data || []
+    kbCategories.value = Array.isArray(kbRes) ? kbRes : (kbRes?.data || kbRes || [])
 
     // 如果不是新建,加载智能体数据
     if (!isNewAgent.value) {
@@ -416,11 +431,12 @@ const loadPageData = async () => {
       // 新建模式:设置默认值
       if (llmModels.value.length > 0) {
         configData.llmModelId = llmModels.value.find(m => m.isDefault)?.id || llmModels.value[0].id
+        console.log('✅ 设置默认模型 ID:', configData.llmModelId)
       }
     }
   } catch (error) {
-    console.error('加载页面数据失败:', error)
-    ElMessage.error('加载页面数据失败')
+    console.error('❌ 加载页面数据失败:', error)
+    ElMessage.error('加载页面数据失败: ' + (error.message || '未知错误'))
   } finally {
     pageLoading.value = false
   }
@@ -432,8 +448,8 @@ const loadPageData = async () => {
 const loadAgentData = async () => {
   try {
     // 加载基础信息
-    const agentRes = await getAgentDetail(route.params.id)
-    const agent = agentRes.data
+    // request.js 拦截器已经返回了 res.data，所以直接访问 agentRes
+    const agent = await getAgentDetail(route.params.id)
     
     formData.name = agent.name
     formData.avatarUrl = agent.avatarUrl
@@ -443,8 +459,7 @@ const loadAgentData = async () => {
     agentStatus.value = agent.status
 
     // 加载配置信息
-    const configRes = await getAgentConfig(route.params.id)
-    const config = configRes.data
+    const config = await getAgentConfig(route.params.id)
 
     configData.systemPrompt = config.systemPrompt || ''
     configData.languageStyle = config.languageStyle || 'ENCOURAGING'
@@ -483,7 +498,8 @@ const saveAgent = async () => {
     if (isNewAgent.value) {
       // 创建新智能体
       const createRes = await createAgent(formData)
-      agentId = createRes.data.id
+      // request.js 拦截器已经返回了 res.data，所以直接访问 createRes.id
+      agentId = createRes.id
       ElMessage.success('智能体创建成功')
       
       // 创建后跳转到编辑页
@@ -764,9 +780,11 @@ onMounted(() => {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 8px;
 
     .model-name {
       font-weight: 500;
+      flex: 1;
     }
   }
 
@@ -775,6 +793,21 @@ onMounted(() => {
     padding: 12px;
     background: #f5f7fa;
     border-radius: 6px;
+  }
+  
+  .form-tip {
+    margin-top: 8px;
+    font-size: 13px;
+    color: #909399;
+    
+    a {
+      color: #409eff;
+      text-decoration: none;
+      
+      &:hover {
+        text-decoration: underline;
+      }
+    }
   }
 
   .knowledge-selector {

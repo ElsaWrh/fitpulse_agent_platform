@@ -6,7 +6,8 @@
 
 | 文件名 | 类型 | 用途 | 必须执行 |
 |--------|------|------|----------|
-| `01_schema.sql` | DDL | 创建数据库和表结构 | ✅ 是 |
+| `00_init.sql` | DDL | 创建数据库、设置字符集 | ✅ 是 |
+| `01_schema.sql` | DDL | 创建所有数据表结构 | ✅ 是 |
 | `02_init_data.sql` | DML | 插入初始配置（LLM、智能体） | ✅ 是 |
 | `test_data.sql` | DML | 插入测试用户和示例数据 | ❌ 可选 |
 
@@ -15,10 +16,13 @@
 ### 生产环境部署（推荐）
 
 ```bash
-# 步骤 1: 创建数据库和表结构
+# 步骤 1: 创建数据库
+mysql -u root -p < 00_init.sql
+
+# 步骤 2: 创建表结构
 mysql -u root -p < 01_schema.sql
 
-# 步骤 2: 插入初始配置数据
+# 步骤 3: 插入初始配置数据
 mysql -u root -p < 02_init_data.sql
 
 # 完成！系统已可用
@@ -27,51 +31,74 @@ mysql -u root -p < 02_init_data.sql
 ### 开发/测试环境部署
 
 ```bash
-# 步骤 1: 创建数据库和表结构
-mysql -u root -p < 01_schema.sql
+# 步骤 1-3: 同上
 
-# 步骤 2: 插入初始配置数据
-mysql -u root -p < 02_init_data.sql
-
-# 步骤 3: 插入测试数据（可选）
+# 步骤 4: 插入测试数据（可选）
 mysql -u root -p < test_data.sql
 ```
 
-### PowerShell 部署
+### PowerShell 一键部署
 
 ```powershell
 # 方式一：逐个执行
+Get-Content .\00_init.sql | mysql -u root -p
 Get-Content .\01_schema.sql | mysql -u root -p
 Get-Content .\02_init_data.sql | mysql -u root -p
 Get-Content .\test_data.sql | mysql -u root -p  # 可选
 
-# 方式二：一条命令全部执行
-Get-Content .\01_schema.sql, .\02_init_data.sql | mysql -u root -p
+# 方式二：一条命令全部执行（生产环境）
+Get-Content .\00_init.sql, .\01_schema.sql, .\02_init_data.sql | mysql -u root -p
+
+# 方式三：包含测试数据
+Get-Content .\00_init.sql, .\01_schema.sql, .\02_init_data.sql, .\test_data.sql | mysql -u root -p
+```
+
+### Docker MySQL 部署
+
+```bash
+# 进入容器执行
+docker exec -i mysql8-demo mysql -u root -p123456 < 00_init.sql
+docker exec -i mysql8-demo mysql -u root -p123456 < 01_schema.sql
+docker exec -i mysql8-demo mysql -u root -p123456 < 02_init_data.sql
 ```
 
 ## 📊 脚本内容详解
 
+### 00_init.sql - 数据库初始化
+
+**包含内容**:
+- 设置客户端字符集 (utf8mb4)
+- 创建 `fitpulse_db` 数据库
+- 验证数据库创建结果
+
+**特点**:
+- 独立的数据库创建脚本
+- 可单独执行用于重建数据库
+
 ### 01_schema.sql - 表结构定义
 
 **包含内容**:
-- 创建 `fitpulse_db` 数据库
 - 创建 13 张数据表：
-  - 用户相关: `user`, `health_profile`
-  - 健康记录: `weight_log`, `workout_log`, `sleep_log`, `diet_log`
-  - AI 智能体: `agent`, `agent_config`, `conversation`, `message`
-  - 计划管理: `health_plan`
-  - LLM 配置: `llm_provider`, `llm_model`
+  - **用户模块**: `user`, `health_profile`
+  - **健康记录**: `weight_log`, `workout_log`, `sleep_log`, `diet_log`
+  - **智能体模块**: `agent`, `agent_config`
+  - **对话模块**: `conversation`, `message`
+  - **计划模块**: `health_plan`
+  - **LLM 配置**: `llm_provider`, `llm_model`
 
 **特点**:
 - 纯 DDL 语句，不包含任何数据
 - 可重复执行（使用 `IF NOT EXISTS`）
 - 支持外键约束和索引
+- 结构化分区注释
 
 ### 02_init_data.sql - 初始配置
 
 **包含内容**:
 - **LLM 提供商**: 阿里云百炼（默认启用）、OpenAI（备用）
-- **LLM 模型**: qwen-plus（默认）、qwen-turbo、qwen-max、qwen-long、gpt-4o
+- **LLM 模型**: 
+  - 通义千问系列: qwen-plus（默认）、qwen-turbo、qwen-max、qwen-long
+  - GPT 系列: gpt-4o、gpt-4o-mini、gpt-3.5-turbo
 - **预置智能体**: 3 个系统智能体
   1. AI 健康助手（综合健康咨询）
   2. 饮食营养顾问（饮食分析）
@@ -133,7 +160,7 @@ VALUES (4, '系统提示词...', ...);
 
 ```sql
 DROP DATABASE IF EXISTS fitpulse_db;
--- 然后重新执行 01 和 02
+-- 然后重新执行 00_init.sql、01_schema.sql 和 02_init_data.sql
 ```
 
 ### 只清空用户数据（保留配置）
@@ -205,8 +232,8 @@ mysqldump -u root -p --no-create-info fitpulse_db > data_backup.sql
 
 ## ⚠️ 注意事项
 
-1. **执行顺序**: 必须先执行 `01_schema.sql`，再执行 `02_init_data.sql`
-2. **API Key**: 部署到生产环境前，请修改 `02_init_data.sql` 中的 API Key
+1. **执行顺序**: 必须按 `00_init.sql` → `01_schema.sql` → `02_init_data.sql` 顺序执行
+2. **API Key**: 部署到生产环境前，请在「个人设置」页面配置 LLM API Key
 3. **测试数据**: 生产环境不要执行 `test_data.sql`
 4. **字符编码**: 确保 MySQL 使用 UTF-8 (utf8mb4) 编码
 5. **权限**: 执行脚本的用户需要有创建数据库和表的权限
@@ -224,7 +251,11 @@ FLUSH PRIVILEGES;
 
 ### 错误: Unknown database
 
-确保先执行了 `01_schema.sql`，它会创建数据库。
+确保先执行了 `00_init.sql`，它会创建数据库。
+
+### 错误: Table doesn't exist
+
+确保按顺序执行：先 `00_init.sql`，再 `01_schema.sql`，最后 `02_init_data.sql`。
 
 ### 错误: Foreign key constraint fails
 
@@ -232,6 +263,7 @@ FLUSH PRIVILEGES;
 
 ```sql
 DROP DATABASE IF EXISTS fitpulse_db;
+-- 然后重新执行 00_init.sql、01_schema.sql 和 02_init_data.sql
 ```
 
 ### 表已存在
@@ -247,6 +279,6 @@ DROP DATABASE IF EXISTS fitpulse_db;
 
 ## 📋 版本历史
 
-- **v2.0** (2025-12-17) - 拆分为 schema 和 data 两个文件，便于部署
-- **v1.1** (2025-12-15) - 添加阿里云百炼支持
+- **v2.0** (2026-01-06) - 重构为三文件结构（init/schema/data），添加更多 GPT 模型
+- **v1.1** (2025-12-17) - 拆分为 schema 和 data 两个文件
 - **v1.0** (2025-12-05) - 初始版本

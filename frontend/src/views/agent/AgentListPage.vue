@@ -1,5 +1,5 @@
 <template>
-  <div class="agent-center">
+  <div class="agent-center" v-loading="loading">
     <!-- 页面头部 -->
     <div class="page-header">
       <div class="header-left">
@@ -13,10 +13,37 @@
       </div>
     </div>
 
+    <!-- 筛选和排序工具栏 -->
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <el-select 
+          v-model="filterCategory" 
+          placeholder="筛选类别" 
+          clearable
+          style="width: 160px"
+        >
+          <el-option label="全部类别" value="" />
+          <el-option label="健康顾问" value="HEALTH_COACH" />
+          <el-option label="营养顾问" value="NUTRITION_COACH" />
+          <el-option label="睡眠顾问" value="SLEEP_COACH" />
+          <el-option label="健身教练" value="FITNESS_COACH" />
+          <el-option label="自定义" value="CUSTOM" />
+        </el-select>
+      </div>
+      <div class="toolbar-right">
+        <span class="sort-label">排序：</span>
+        <el-radio-group v-model="sortBy" size="small">
+          <el-radio-button label="latest">最新创建</el-radio-button>
+          <el-radio-button label="name">名称</el-radio-button>
+          <el-radio-button label="updated">最近更新</el-radio-button>
+        </el-radio-group>
+      </div>
+    </div>
+
     <!-- 智能体卡片列表 -->
-    <div class="agents-grid" v-if="agents.length > 0">
+    <div class="agents-grid" v-if="displayedAgents.length > 0">
       <div 
-        v-for="agent in agents" 
+        v-for="agent in displayedAgents" 
         :key="agent.id"
         class="agent-card"
         @click="handleAgentClick(agent)"
@@ -27,13 +54,13 @@
           </div>
           <div class="agent-meta">
             <h3 class="agent-name">{{ agent.name }}</h3>
-            <span class="agent-category">{{ agent.category }}</span>
+            <span class="agent-category">{{ agent.categoryLabel }}</span>
           </div>
         </div>
         
         <p class="agent-description">{{ agent.description }}</p>
         
-        <div class="agent-tags">
+        <div class="agent-tags" v-if="agent.tags && agent.tags.length > 0">
           <el-tag 
             v-for="tag in agent.tags" 
             :key="tag"
@@ -50,13 +77,18 @@
             <el-icon><ChatDotRound /></el-icon>
             开始对话
           </el-button>
-          <el-button 
-            v-if="!agent.isSystem" 
-            size="small" 
-            @click.stop="editAgent(agent)"
-          >
+          <el-button size="small" @click.stop="editAgent(agent)">
             <el-icon><Edit /></el-icon>
             编辑
+          </el-button>
+          <el-button 
+            type="danger" 
+            size="small" 
+            plain
+            @click.stop="confirmDelete(agent)"
+          >
+            <el-icon><Delete /></el-icon>
+            删除
           </el-button>
         </div>
       </div>
@@ -74,46 +106,101 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import { Plus, ChatDotRound, Edit } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { Plus, ChatDotRound, Edit, Delete } from '@element-plus/icons-vue'
+import { getAgents, deleteAgent } from '@/api/agent'
 
 const router = useRouter()
+const agents = ref([])
+const loading = ref(false)
+const filterCategory = ref('')
+const sortBy = ref('latest')
 
-// 预置智能体数据(后续从后端API获取)
-const agents = ref([
-  {
-    id: 'health_assistant',
-    name: 'AI 健康助手',
-    description: '综合健康咨询,帮你制定运动和生活方式计划',
-    icon: '🏃',
-    iconColor: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    category: '系统预置',
-    tags: ['综合健康', '健身计划', '生活方式'],
-    isSystem: true
-  },
-  {
-    id: 'diet_assistant',
-    name: '饮食营养顾问',
-    description: '分析饮食结构,给出科学饮食和营养建议',
-    icon: '🍎',
-    iconColor: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-    category: '系统预置',
-    tags: ['饮食', '营养', '减脂搭配'],
-    isSystem: true
-  },
-  {
-    id: 'sleep_assistant',
-    name: '睡眠改善顾问',
-    description: '帮助你优化作息,提高睡眠质量与恢复效率',
-    icon: '🌙',
-    iconColor: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-    category: '系统预置',
-    tags: ['睡眠', '作息', '恢复'],
-    isSystem: true
+// 辅助函数 - 获取类别标签
+const getCategoryLabel = (category) => {
+  const labels = {
+    'HEALTH_COACH': '健康顾问',
+    'NUTRITION_COACH': '营养顾问',
+    'SLEEP_COACH': '睡眠顾问',
+    'FITNESS_COACH': '健身教练',
+    'CUSTOM': '自定义'
   }
-])
+  return labels[category] || category
+}
+
+// 辅助函数 - 获取图标颜色
+const getIconColor = (category) => {
+  const colors = {
+    'HEALTH_COACH': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    'NUTRITION_COACH': 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+    'SLEEP_COACH': 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+    'FITNESS_COACH': 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)'
+  }
+  return colors[category] || 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)'
+}
+
+// 辅助函数 - 生成标签
+const generateTags = (category) => {
+  const tags = {
+    'HEALTH_COACH': ['综合健康', '健身计划', '生活方式'],
+    'NUTRITION_COACH': ['饮食', '营养', '减脂搭配'],
+    'SLEEP_COACH': ['睡眠', '作息', '恢复'],
+    'FITNESS_COACH': ['健身', '训练', '增肌']
+  }
+  return tags[category] || ['智能体']
+}
+
+/**
+ * 加载智能体列表
+ */
+const loadAgents = async () => {
+  loading.value = true
+  try {
+    const data = await getAgents()
+    agents.value = data.map(agent => ({
+      ...agent,
+      icon: agent.avatarUrl || '🤖',
+      iconColor: getIconColor(agent.category),
+      categoryLabel: getCategoryLabel(agent.category),
+      tags: generateTags(agent.category),
+      description: agent.description || '暂无描述'
+    }))
+  } catch (error) {
+    ElMessage.error('加载智能体列表失败: ' + (error.message || '未知错误'))
+  } finally {
+    loading.value = false
+  }
+}
+
+/**
+ * 筛选和排序后的智能体列表
+ */
+const displayedAgents = computed(() => {
+  let filtered = agents.value
+
+  // 筛选类别
+  if (filterCategory.value) {
+    filtered = filtered.filter(agent => agent.category === filterCategory.value)
+  }
+
+  // 排序
+  const sorted = [...filtered]
+  switch (sortBy.value) {
+    case 'latest':
+      sorted.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      break
+    case 'name':
+      sorted.sort((a, b) => a.name.localeCompare(b.name, 'zh-CN'))
+      break
+    case 'updated':
+      sorted.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
+      break
+  }
+
+  return sorted
+})
 
 /**
  * 点击智能体卡片
@@ -143,9 +230,49 @@ const createNewAgent = () => {
   router.push('/agents/new')
 }
 
+/**
+ * 确认删除智能体
+ */
+const confirmDelete = async (agent) => {
+  try {
+    await ElMessageBox.confirm(
+      `确定要删除智能体"${agent.name}"吗？删除后将无法恢复。`,
+      '确认删除',
+      {
+        confirmButtonText: '确定删除',
+        cancelButtonText: '取消',
+        type: 'warning',
+        confirmButtonClass: 'el-button--danger'
+      }
+    )
+    
+    await handleDelete(agent)
+  } catch (error) {
+    // 用户取消删除
+    if (error !== 'cancel') {
+      console.error('删除确认失败:', error)
+    }
+  }
+}
+
+/**
+ * 删除智能体
+ */
+const handleDelete = async (agent) => {
+  loading.value = true
+  try {
+    await deleteAgent(agent.id)
+    ElMessage.success('删除成功')
+    await loadAgents()
+  } catch (error) {
+    ElMessage.error('删除失败: ' + (error.message || '未知错误'))
+  } finally {
+    loading.value = false
+  }
+}
+
 onMounted(() => {
-  // TODO: 从后端加载智能体列表
-  // loadAgents()
+  loadAgents()
 })
 </script>
 
@@ -159,7 +286,7 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 32px;
+  margin-bottom: 24px;
   
   .header-left {
     .page-title {
@@ -173,6 +300,46 @@ onMounted(() => {
       font-size: 14px;
       color: #909399;
       margin: 0;
+    }
+  }
+}
+
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: #fff;
+  border-radius: 8px;
+  margin-bottom: 24px;
+  border: 1px solid #e4e7ed;
+  
+  .toolbar-left {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+  
+  .toolbar-right {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    
+    .sort-label {
+      font-size: 14px;
+      color: #606266;
+      font-weight: 500;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 12px;
+    
+    .toolbar-left,
+    .toolbar-right {
+      width: 100%;
+      justify-content: space-between;
     }
   }
 }
@@ -265,6 +432,14 @@ onMounted(() => {
     gap: 8px;
     padding-top: 16px;
     border-top: 1px solid #f0f0f0;
+    
+    .el-button {
+      flex: 1;
+      
+      &:last-child {
+        flex: 0 0 auto;
+      }
+    }
   }
 }
 </style>

@@ -1,38 +1,53 @@
--- ==========================================
--- FitPulse 数据库表结构定义
--- Schema Definition (DDL)
--- 创建时间: 2025-12-17
--- 数据库编码: UTF-8 (utf8mb4)
--- ==========================================
-
--- 设置客户端字符集和连接字符集
+-- 设置会话字符集（必须在最开头）
 SET NAMES utf8mb4;
 SET CHARACTER SET utf8mb4;
-SET character_set_client = utf8mb4;
-SET character_set_connection = utf8mb4;
-SET character_set_database = utf8mb4;
-SET character_set_results = utf8mb4;
-SET character_set_server = utf8mb4;
-SET collation_connection = utf8mb4_unicode_ci;
-SET collation_database = utf8mb4_unicode_ci;
-SET collation_server = utf8mb4_unicode_ci;
 
--- 创建数据库(如果不存在)
-CREATE DATABASE IF NOT EXISTS `fitpulse_db` 
-  DEFAULT CHARACTER SET utf8mb4 
-  COLLATE utf8mb4_unicode_ci;
+-- ╔════════════════════════════════════════════════════════════════════════════╗
+-- ║                    FitPulse 健康平台 - 数据表结构                           ║
+-- ║                       Schema Definition (DDL)                              ║
+-- ╠════════════════════════════════════════════════════════════════════════════╣
+-- ║  文件: 01_schema.sql                                                       ║
+-- ║  用途: 创建所有数据表结构                                                   ║
+-- ║  版本: v2.0                                                                ║
+-- ║  更新: 2026-01-06                                                          ║
+-- ║  编码: UTF-8 (utf8mb4)                                                     ║
+-- ╚════════════════════════════════════════════════════════════════════════════╝
+--
+-- 执行顺序:
+--   1. 00_init.sql      <- 创建数据库
+--   2. 01_schema.sql    <- 当前文件（创建表结构）
+--   3. 02_init_data.sql <- 插入初始配置数据
+--   4. test_data.sql    <- [可选] 插入测试数据
+--
+-- 表结构概览:
+--   ┌─────────────────────────────────────────────────────────────────────┐
+--   │ 用户模块        │ user, health_profile                             │
+--   │ 健康记录        │ weight_log, workout_log, sleep_log, diet_log     │
+--   │ 智能体模块      │ agent, agent_config                              │
+--   │ 对话模块        │ conversation, message                            │
+--   │ 计划模块        │ health_plan                                      │
+--   │ LLM 配置        │ llm_provider, llm_model                          │
+--   └─────────────────────────────────────────────────────────────────────┘
+--
+-- ============================================================================
 
--- 使用数据库
+-- ============================================================================
+-- 环境准备
+-- ============================================================================
 USE `fitpulse_db`;
 
--- 禁用外键检查(导入时)
+-- 禁用外键检查（创建表时需要）
 SET FOREIGN_KEY_CHECKS = 0;
 
--- ==========================================
--- 数据表定义
--- ==========================================
+-- ╔════════════════════════════════════════════════════════════════════════════╗
+-- ║                          第一部分: 用户模块                                 ║
+-- ╚════════════════════════════════════════════════════════════════════════════╝
 
--- 1. 用户表
+-- ============================================================================
+-- 1.1 用户表 (user)
+-- ============================================================================
+-- 存储用户基本信息、登录凭证和账户状态
+-- ============================================================================
 CREATE TABLE IF NOT EXISTS `user` (
   `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '用户ID',
   `email` VARCHAR(100) NOT NULL COMMENT '邮箱',
@@ -51,7 +66,11 @@ CREATE TABLE IF NOT EXISTS `user` (
   UNIQUE KEY `uk_email` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户表';
 
--- 2. 健康档案表
+-- ============================================================================
+-- 1.2 健康档案表 (health_profile)
+-- ============================================================================
+-- 存储用户的健康档案信息，与用户表 1:1 关系
+-- ============================================================================
 CREATE TABLE IF NOT EXISTS `health_profile` (
   `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '档案ID',
   `user_id` BIGINT NOT NULL COMMENT '用户ID',
@@ -75,7 +94,13 @@ CREATE TABLE IF NOT EXISTS `health_profile` (
   CONSTRAINT `fk_health_profile_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='健康档案表';
 
--- 3. 体重记录表
+-- ╔════════════════════════════════════════════════════════════════════════════╗
+-- ║                         第二部分: 健康记录模块                              ║
+-- ╚════════════════════════════════════════════════════════════════════════════╝
+
+-- ============================================================================
+-- 2.1 体重记录表 (weight_log)
+-- ============================================================================
 CREATE TABLE IF NOT EXISTS `weight_log` (
   `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '记录ID',
   `user_id` BIGINT NOT NULL COMMENT '用户ID',
@@ -91,7 +116,11 @@ CREATE TABLE IF NOT EXISTS `weight_log` (
   CONSTRAINT `fk_weight_log_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='体重记录表';
 
--- 4. 训练记录表
+-- ============================================================================
+-- 2.2 训练记录表 (workout_log)
+-- ============================================================================
+-- 训练类型: CARDIO(有氧) / STRENGTH(力量) / HIIT(高强度间歇) / FLEXIBILITY(柔韧)
+-- ============================================================================
 CREATE TABLE IF NOT EXISTS `workout_log` (
   `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '记录ID',
   `user_id` BIGINT NOT NULL COMMENT '用户ID',
@@ -110,7 +139,9 @@ CREATE TABLE IF NOT EXISTS `workout_log` (
   CONSTRAINT `fk_workout_log_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='训练记录表';
 
--- 5. 睡眠记录表
+-- ============================================================================
+-- 2.3 睡眠记录表 (sleep_log)
+-- ============================================================================
 CREATE TABLE IF NOT EXISTS `sleep_log` (
   `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '记录ID',
   `user_id` BIGINT NOT NULL COMMENT '用户ID',
@@ -126,7 +157,12 @@ CREATE TABLE IF NOT EXISTS `sleep_log` (
   CONSTRAINT `fk_sleep_log_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='睡眠记录表';
 
--- 6. 饮食记录表
+-- ============================================================================
+-- 2.4 饮食记录表 (diet_log)
+-- ============================================================================
+-- 餐次类型: BREAKFAST(早餐) / LUNCH(午餐) / DINNER(晚餐) / SNACK(加餐)
+-- 风险等级: GREEN(健康) / YELLOW(需注意) / RED(高风险)
+-- ============================================================================
 CREATE TABLE IF NOT EXISTS `diet_log` (
   `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '记录ID',
   `user_id` BIGINT NOT NULL COMMENT '用户ID',
@@ -147,7 +183,16 @@ CREATE TABLE IF NOT EXISTS `diet_log` (
   CONSTRAINT `fk_diet_log_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='饮食记录表';
 
--- 7. 智能体表
+-- ╔════════════════════════════════════════════════════════════════════════════╗
+-- ║                         第三部分: 智能体模块                                ║
+-- ╚════════════════════════════════════════════════════════════════════════════╝
+
+-- ============================================================================
+-- 3.1 智能体表 (agent)
+-- ============================================================================
+-- 分类: HEALTH_COACH / NUTRITION_COACH / SLEEP_COACH / FITNESS_COACH / GENERAL
+-- 状态: DRAFT(草稿) / PENDING(审核中) / APPROVED(已发布) / REJECTED(已拒绝)
+-- ============================================================================
 CREATE TABLE IF NOT EXISTS `agent` (
   `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '智能体ID',
   `name` VARCHAR(100) NOT NULL COMMENT '名称',
@@ -167,7 +212,11 @@ CREATE TABLE IF NOT EXISTS `agent` (
   KEY `idx_created_by` (`created_by`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='智能体表';
 
--- 8. 智能体配置表
+-- ============================================================================
+-- 3.2 智能体配置表 (agent_config)
+-- ============================================================================
+-- 语言风格: PROFESSIONAL(专业) / ENCOURAGING(鼓励) / CASUAL(轻松) / GENTLE(温和)
+-- ============================================================================
 CREATE TABLE IF NOT EXISTS `agent_config` (
   `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '配置ID',
   `agent_id` BIGINT NOT NULL COMMENT '智能体ID',
@@ -186,7 +235,13 @@ CREATE TABLE IF NOT EXISTS `agent_config` (
   CONSTRAINT `fk_agent_config_agent` FOREIGN KEY (`agent_id`) REFERENCES `agent` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='智能体配置表';
 
--- 9. 会话表
+-- ╔════════════════════════════════════════════════════════════════════════════╗
+-- ║                          第四部分: 对话模块                                 ║
+-- ╚════════════════════════════════════════════════════════════════════════════╝
+
+-- ============================================================================
+-- 4.1 会话表 (conversation)
+-- ============================================================================
 CREATE TABLE IF NOT EXISTS `conversation` (
   `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '会话ID',
   `user_id` BIGINT NOT NULL COMMENT '用户ID',
@@ -206,7 +261,11 @@ CREATE TABLE IF NOT EXISTS `conversation` (
   CONSTRAINT `fk_conversation_agent` FOREIGN KEY (`agent_id`) REFERENCES `agent` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='会话表';
 
--- 10. 消息表
+-- ============================================================================
+-- 4.2 消息表 (message)
+-- ============================================================================
+-- 角色: user(用户) / assistant(助手)
+-- ============================================================================
 CREATE TABLE IF NOT EXISTS `message` (
   `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '消息ID',
   `conversation_id` BIGINT NOT NULL COMMENT '会话ID',
@@ -221,7 +280,15 @@ CREATE TABLE IF NOT EXISTS `message` (
   CONSTRAINT `fk_message_conversation` FOREIGN KEY (`conversation_id`) REFERENCES `conversation` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='消息表';
 
--- 11. 健康计划表
+-- ╔════════════════════════════════════════════════════════════════════════════╗
+-- ║                          第五部分: 计划模块                                 ║
+-- ╚════════════════════════════════════════════════════════════════════════════╝
+
+-- ============================================================================
+-- 5.1 健康计划表 (health_plan)
+-- ============================================================================
+-- 计划类型: FAT_LOSS(减脂) / MUSCLE_GAIN(增肌) / MIXED(综合) / MAINTENANCE(维持)
+-- ============================================================================
 CREATE TABLE IF NOT EXISTS `health_plan` (
   `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '计划ID',
   `user_id` BIGINT NOT NULL COMMENT '用户ID',
@@ -242,7 +309,15 @@ CREATE TABLE IF NOT EXISTS `health_plan` (
   CONSTRAINT `fk_health_plan_agent` FOREIGN KEY (`agent_id`) REFERENCES `agent` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='健康计划表';
 
--- 12. LLM提供商表
+-- ╔════════════════════════════════════════════════════════════════════════════╗
+-- ║                         第六部分: LLM 配置模块                              ║
+-- ╚════════════════════════════════════════════════════════════════════════════╝
+
+-- ============================================================================
+-- 6.1 LLM提供商表 (llm_provider)
+-- ============================================================================
+-- 提供商类型: OPENAI / AZURE / DASHSCOPE(阿里云百炼) / CUSTOM
+-- ============================================================================
 CREATE TABLE IF NOT EXISTS `llm_provider` (
   `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '提供商ID',
   `name` VARCHAR(100) NOT NULL COMMENT '提供商名称',
@@ -256,7 +331,11 @@ CREATE TABLE IF NOT EXISTS `llm_provider` (
   KEY `idx_status` (`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='LLM提供商表';
 
--- 13. LLM模型表
+-- ============================================================================
+-- 6.2 LLM模型表 (llm_model)
+-- ============================================================================
+-- 模型类型: CHAT(对话) / EMBEDDING(向量) / MULTIMODAL(多模态)
+-- ============================================================================
 CREATE TABLE IF NOT EXISTS `llm_model` (
   `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '模型ID',
   `provider_id` BIGINT NOT NULL COMMENT '提供商ID',
@@ -275,13 +354,8 @@ CREATE TABLE IF NOT EXISTS `llm_model` (
   CONSTRAINT `fk_llm_model_provider` FOREIGN KEY (`provider_id`) REFERENCES `llm_provider` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='LLM模型表';
 
--- 启用外键检查
+-- ============================================================================
+-- 环境恢复
+-- ============================================================================
 SET FOREIGN_KEY_CHECKS = 1;
 
--- ==========================================
--- 表结构创建完成
--- ==========================================
-SELECT '✅ 数据库表结构创建完成!' as status;
-SELECT CONCAT('数据库: fitpulse_db') as info;
-SELECT CONCAT('表数量: 13') as info;
-SELECT '请执行 02_init_data.sql 插入初始配置数据' as next_step;

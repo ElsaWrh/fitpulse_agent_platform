@@ -23,6 +23,8 @@ public class WebConfig implements WebMvcConfigurer {
                         "/auth/register",
                         "/auth/login",
                         "/health",
+                        "/llm/models", // 允许获取模型列表
+                        "/llm/providers", // 允许获取提供商列表
                         "/error");
     }
 }

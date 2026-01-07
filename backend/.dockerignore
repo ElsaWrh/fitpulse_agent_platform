@@ -1,0 +1,14 @@
+# Reduce Docker build context for backend
+
+# IDE & VCS
+.git/
+.github/
+.idea/
+*.iml
+
+# Build outputs
+target/
+
+# OS/Editor junk
+.DS_Store
+Thumbs.db

@@ -29,6 +29,12 @@ export const getAgentDetail = (id) => {
 }
 
 /**
+ * 获取智能体详情（别名）
+ * @param {string|number} id - 智能体ID
+ */
+export const getAgentById = getAgentDetail
+
+/**
  * 创建智能体
  * @param {Object} data - 智能体数据
  */

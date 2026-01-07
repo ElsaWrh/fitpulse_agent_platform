@@ -100,12 +100,12 @@
           </div>
         </div>
         
-        <div class="feature-card" @click="$router.push('/chat')">
+        <div class="feature-card" @click="$router.push('/agents')">
           <div class="feature-icon chat">
             <el-icon :size="36"><ChatDotRound /></el-icon>
           </div>
           <div class="feature-content">
-            <h3>AI 健康助手</h3>
+            <h3>智能体助手</h3>
             <p>获取智能化的健康建议与运动方案</p>
           </div>
           <div class="feature-arrow">

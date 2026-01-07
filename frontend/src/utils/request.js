@@ -6,7 +6,8 @@ import router from '@/router'
 
 // 创建 axios 实例
 const request = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api',
+  // API 基址来源于环境变量 VITE_API_BASE；默认使用本机 8080 的后端上下文 '/api'
+  baseURL: import.meta.env.VITE_API_BASE || 'http://localhost:8080/api',
   headers: {
     'Content-Type': 'application/json'
   }

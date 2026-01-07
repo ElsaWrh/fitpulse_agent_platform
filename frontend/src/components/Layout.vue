@@ -35,10 +35,6 @@
           <el-icon><Reading /></el-icon>
           <template #title>知识库</template>
         </el-menu-item>
-        <el-menu-item index="/agent/chat/health_assistant">
-          <el-icon><ChatDotRound /></el-icon>
-          <template #title>AI 助手</template>
-        </el-menu-item>
         <el-menu-item index="/profile">
           <el-icon><User /></el-icon>
           <template #title>个人设置</template>
@@ -136,13 +132,7 @@ const pageTitle = computed(() => {
   }
   // 智能体聊天页面特殊处理
   if (route.path.startsWith('/agent/chat/')) {
-    const agentNames = {
-      'health_assistant': 'AI 健康助手',
-      'diet_assistant': '饮食营养顾问',
-      'sleep_assistant': '睡眠改善顾问'
-    }
-    const agentId = route.params.agentId
-    return agentNames[agentId] || 'AI 助手'
+    return 'AI 助手'
   }
   return titles[route.path] || 'FitPulse'
 })

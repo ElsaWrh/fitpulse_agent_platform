@@ -172,6 +172,7 @@ import {
   sendMessageAPI,
   getMessageHistoryAPI
 } from '@/api/chat'
+import { getAgentById } from '@/api/agent'
 
 const route = useRoute()
 const router = useRouter()
@@ -184,67 +185,67 @@ const loading = ref(false)
 const messages = ref([])
 const conversations = ref([])
 const currentConversation = ref(null)
+const currentAgent = ref(null)
 
-// 智能体配置映射
-const agentConfigs = {
-  health_assistant: {
-    id: 'health_assistant',
-    name: 'AI 健康助手',
-    description: '综合健康咨询专家',
-    icon: '🏃',
-    iconColor: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    welcomeText: '我可以帮助您解答健康相关问题、制定运动计划、提供饮食建议等。',
-    quickQuestions: [
-      { icon: '💪', text: '如何制定一个适合初学者的健身计划？' },
-      { icon: '🍎', text: '健康饮食应该注意哪些方面？' },
-      { icon: '😴', text: '如何改善睡眠质量？' },
-      { icon: '🏢', text: '办公室久坐如何保持健康？' }
-    ]
-  },
-  diet_assistant: {
-    id: 'diet_assistant',
-    name: '饮食营养顾问',
-    description: '科学饮食与营养专家',
-    icon: '🍎',
-    iconColor: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-    welcomeText: '我专注于为您提供科学的饮食建议和营养分析。',
-    quickQuestions: [
-      { icon: '🥗', text: '今天吃得健康吗？' },
-      { icon: '📊', text: '帮我算一下今天的摄入' },
-      { icon: '🍽️', text: '适合减脂的晚餐推荐' },
-      { icon: '🥤', text: '如何科学补充蛋白质？' }
-    ]
-  },
-  sleep_assistant: {
-    id: 'sleep_assistant',
-    name: '睡眠改善顾问',
-    description: '优质睡眠与作息专家',
-    icon: '🌙',
-    iconColor: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-    welcomeText: '我将帮助您优化作息，提高睡眠质量与恢复效率。',
-    quickQuestions: [
-      { icon: '📈', text: '帮我分析一下作息' },
-      { icon: '😴', text: '如何减少夜间醒来' },
-      { icon: '📋', text: '制定一份睡眠改善计划' },
-      { icon: '🌡️', text: '睡眠环境如何优化？' }
-    ]
-  }
+// 图标颜色映射
+const iconColors = {
+  'HEALTH_COACH': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+  'NUTRITION_COACH': 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+  'SLEEP_COACH': 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+  'FITNESS_COACH': 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+  'default': 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)'
 }
 
-// 当前智能体配置
+// 当前智能体配置（从后端获取）
 const agentConfig = computed(() => {
-  const agentId = route.params.agentId || 'health_assistant'
-  return agentConfigs[agentId] || agentConfigs.health_assistant
+  if (!currentAgent.value) {
+    return {
+      name: '加载中...',
+      description: '',
+      icon: '🤖',
+      iconColor: iconColors.default,
+      welcomeText: '正在加载智能体配置...',
+      quickQuestions: []
+    }
+  }
+
+  const agent = currentAgent.value
+  return {
+    id: agent.id,
+    name: agent.name,
+    description: agent.description || '',
+    icon: agent.avatarUrl || '🤖',
+    iconColor: iconColors[agent.category] || iconColors.default,
+    welcomeText: agent.welcomeMessage || `您好！我是${agent.name}，很高兴为您服务。`,
+    quickQuestions: parseQuickQuestions(agent)
+  }
 })
+
+/**
+ * 解析快捷问题
+ */
+const parseQuickQuestions = (agent) => {
+  // 可以从 agent.permissions 或其他字段解析
+  // 这里提供一个通用的默认问题
+  return [
+    { icon: '💬', text: '你能帮我做什么？' },
+    { icon: '📋', text: '给我一些建议' },
+    { icon: '❓', text: '如何开始？' }
+  ]
+}
 
 /**
  * 新建对话
  */
 const handleNewChat = async () => {
   try {
-    const agentId = route.params.agentId || 'health_assistant'
+    const agentId = route.params.agentId
+    if (!agentId) {
+      ElMessage.error('智能体 ID 不能为空')
+      return
+    }
     const res = await createConversationAPI({
-      agentId: getAgentNumericId(agentId),
+      agentId: parseInt(agentId),
       title: `与${agentConfig.value.name}的对话`
     })
     
@@ -262,27 +263,17 @@ const handleNewChat = async () => {
 }
 
 /**
- * 获取智能体数字ID
- */
-const getAgentNumericId = (agentId) => {
-  const mapping = {
-    'health_assistant': 1,
-    'diet_assistant': 2,
-    'sleep_assistant': 3
-  }
-  return mapping[agentId] || 1
-}
-
-/**
  * 加载对话列表
  */
 const loadConversations = async () => {
   try {
-    const agentId = route.params.agentId || 'health_assistant'
+    const agentId = route.params.agentId
+    if (!agentId) return
+    
     const res = await getConversationListAPI({
       current: 1,
       size: 50,
-      agentId: getAgentNumericId(agentId)
+      agentId: parseInt(agentId)
     })
     
     // request.js 拦截器在 code=0 时直接返回 data 部分
@@ -508,7 +499,30 @@ const scrollToBottom = () => {
   })
 }
 
+/**
+ * 加载智能体信息
+ */
+const loadAgentInfo = async () => {
+  try {
+    const agentId = route.params.agentId
+    if (!agentId) {
+      ElMessage.error('智能体 ID 不能为空')
+      router.push('/agents')
+      return
+    }
+    
+    const agent = await getAgentById(parseInt(agentId))
+    currentAgent.value = agent
+  } catch (error) {
+    console.error('加载智能体信息失败:', error)
+    ElMessage.error('加载智能体信息失败: ' + (error.message || '未知错误'))
+    router.push('/agents')
+  }
+}
+
 onMounted(async () => {
+  // 先加载智能体信息
+  await loadAgentInfo()
   // 加载当前智能体的对话历史
   await loadConversations()
 })
@@ -518,6 +532,7 @@ watch(() => route.params.agentId, async (newAgentId) => {
   if (newAgentId) {
     messages.value = []
     currentConversation.value = null
+    await loadAgentInfo()
     await loadConversations()
   }
 })
