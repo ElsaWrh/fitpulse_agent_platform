@@ -300,8 +300,8 @@ const getAIResponse = (question) => {
 <style scoped lang="scss">
 .chat-view {
   width: 100%;
-  height: calc(100vh - 64px - 48px);
-  min-height: 500px;
+  height: 100%;
+  min-height: 0;
 }
 
 .chat-container {
@@ -320,6 +320,8 @@ const getAIResponse = (question) => {
   border-right: 1px solid #e5e7eb;
   display: flex;
   flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
   
   .sidebar-header {
     padding: 20px;
@@ -442,9 +444,12 @@ const getAIResponse = (question) => {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .chat-header {
+  flex-shrink: 0;
   padding: 16px 24px;
   border-bottom: 1px solid #e5e7eb;
   display: flex;
@@ -503,6 +508,7 @@ const getAIResponse = (question) => {
 /* 消息容器 */
 .messages-container {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   padding: 24px;
 }
@@ -690,6 +696,7 @@ const getAIResponse = (question) => {
 
 /* 输入区域 */
 .input-area {
+  flex-shrink: 0;
   padding: 16px 24px 20px;
   border-top: 1px solid #e5e7eb;
   

@@ -13,12 +13,13 @@ import { RouterView } from 'vue-router'
   box-sizing: border-box;
 }
 
-body {
+html, body {
+  height: 100%;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   background-color: #f5f7fa;
 }
 
 #app {
-  min-height: 100vh;
+  height: 100%;
 }
 </style>

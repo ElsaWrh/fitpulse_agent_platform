@@ -185,9 +185,10 @@ const handleCommand = async (command) => {
 <style scoped lang="scss">
 .layout-container {
   display: flex;
-  min-height: 100vh;
+  height: 100vh;
   width: 100%;
   position: relative;
+  overflow: hidden;
 }
 
 /* 左侧边栏 */
@@ -337,7 +338,7 @@ const handleCommand = async (command) => {
   margin-left: 240px;
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  min-height: 0;
   background: #f0f2f5;
   transition: margin-left 0.3s ease;
   width: calc(100% - 240px);
@@ -423,8 +424,9 @@ const handleCommand = async (command) => {
 /* 主内容区 */
 .main-content {
   flex: 1;
+  min-height: 0;
   padding: 24px 32px;
-  overflow-y: auto;
+  overflow: hidden;
   width: 100%;
   box-sizing: border-box;
 }
