@@ -205,7 +205,7 @@
         </el-form-item>
         <el-form-item label="记录日期">
           <el-date-picker 
-            v-model="weightForm.recordDate" 
+            v-model="weightForm.measuredAt" 
             type="date" 
             placeholder="选择日期"
             size="large"
@@ -247,7 +247,7 @@
         </el-form-item>
         <el-form-item label="运动时长 (分钟)">
           <el-input-number 
-            v-model="workoutForm.duration" 
+            v-model="workoutForm.durationMinutes" 
             :min="1" 
             :max="300"
             size="large"
@@ -256,7 +256,7 @@
         </el-form-item>
         <el-form-item label="消耗卡路里 (可选)">
           <el-input-number 
-            v-model="workoutForm.calories" 
+            v-model="workoutForm.caloriesBurned" 
             :min="0" 
             :max="2000"
             size="large"
@@ -274,7 +274,7 @@
         </el-form-item>
         <el-form-item label="备注">
           <el-input 
-            v-model="workoutForm.note" 
+            v-model="workoutForm.notes" 
             type="textarea" 
             :rows="3"
             placeholder="可选，添加备注信息"
@@ -335,17 +335,17 @@ const showWorkoutDialog = ref(false)
 // 体重记录表单
 const weightForm = reactive({
   weight: null,
-  recordDate: new Date(),
+  measuredAt: new Date(),
   note: ''
 })
 
 // 运动记录表单
 const workoutForm = reactive({
   workoutType: '',
-  duration: null,
-  calories: null,
+  durationMinutes: null,
+  caloriesBurned: null,
   workoutDate: new Date(),
-  note: ''
+  notes: ''
 })
 
 // 体重记录列表
@@ -403,7 +403,7 @@ const loadWeightLogs = async () => {
     
     // 格式化数据用于显示
     weightRecords.value = (data || []).map((record, index) => {
-      const date = new Date(record.recordDate)
+      const date = new Date(record.measuredAt)
       const prevWeight = index < data.length - 1 ? data[index + 1].weight : record.weight
       const change = (record.weight - prevWeight).toFixed(1)
       
@@ -499,8 +499,8 @@ const handleAddWeight = async () => {
   try {
     await addWeightLogAPI({
       weight: weightForm.weight,
-      recordDate: weightForm.recordDate ? new Date(weightForm.recordDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-      note: weightForm.note
+      measuredAt: weightForm.measuredAt ? new Date(weightForm.measuredAt).toISOString() : new Date().toISOString(),
+      notes: weightForm.note
     })
     
     ElMessage.success('体重记录已保存')
@@ -512,7 +512,7 @@ const handleAddWeight = async () => {
     
     // 重置表单
     weightForm.weight = null
-    weightForm.recordDate = new Date()
+    weightForm.measuredAt = new Date()
     weightForm.note = ''
   } catch (error) {
     console.error('添加体重记录失败:', error)
@@ -522,7 +522,7 @@ const handleAddWeight = async () => {
 
 // 添加运动记录
 const handleAddWorkout = async () => {
-  if (!workoutForm.workoutType || !workoutForm.duration) {
+  if (!workoutForm.workoutType || !workoutForm.durationMinutes) {
     ElMessage.warning('请填写运动类型和时长')
     return
   }
@@ -530,10 +530,10 @@ const handleAddWorkout = async () => {
   try {
     await addWorkoutLogAPI({
       workoutType: workoutForm.workoutType,
-      duration: workoutForm.duration,
-      calories: workoutForm.calories,
+      durationMinutes: workoutForm.durationMinutes,
+      caloriesBurned: workoutForm.caloriesBurned,
       workoutDate: workoutForm.workoutDate ? new Date(workoutForm.workoutDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-      note: workoutForm.note
+      notes: workoutForm.notes
     })
     
     ElMessage.success('运动记录已保存')
@@ -545,10 +545,10 @@ const handleAddWorkout = async () => {
     
     // 重置表单
     workoutForm.workoutType = ''
-    workoutForm.duration = null
-    workoutForm.calories = null
+    workoutForm.durationMinutes = null
+    workoutForm.caloriesBurned = null
     workoutForm.workoutDate = new Date()
-    workoutForm.note = ''
+    workoutForm.notes = ''
   } catch (error) {
     console.error('添加运动记录失败:', error)
     ElMessage.error('保存失败，请重试')

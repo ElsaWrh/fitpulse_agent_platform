@@ -1,5 +1,42 @@
 <template>
   <div class="home-view">
+    <!-- 使用指南提示 -->
+    <el-alert
+      v-if="!hasApiConfigured"
+      class="usage-guide-alert"
+      title="🎯 开始使用前的重要提示"
+      type="warning"
+      :closable="false"
+    >
+      <template #default>
+        <div class="guide-content">
+          <div class="guide-steps">
+            <div class="guide-step">
+              <span class="step-number">1</span>
+              <div class="step-text">
+                <strong>配置 API 密钥</strong>
+                <p>在使用智能体功能之前，请先到 <el-link type="primary" @click="$router.push('/profile')">个人中心</el-link> 配置您的 LLM API 密钥（OpenAI 或 DashScope）</p>
+              </div>
+            </div>
+            <div class="guide-step">
+              <span class="step-number">2</span>
+              <div class="step-text">
+                <strong>完善健康档案</strong>
+                <p>前往 <el-link type="primary" @click="$router.push('/health')">健康档案</el-link> 填写您的基础信息、体重目标等，以获得更精准的建议</p>
+              </div>
+            </div>
+            <div class="guide-step">
+              <span class="step-number">3</span>
+              <div class="step-text">
+                <strong>开始智能对话</strong>
+                <p>配置完成后，即可前往 <el-link type="primary" @click="$router.push('/chat')">智能助手</el-link> 与 AI 对话，获取个性化健康建议</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </template>
+    </el-alert>
+
     <!-- 欢迎横幅 -->
     <div class="welcome-banner">
       <div class="welcome-content">
@@ -167,6 +204,9 @@ import {
 
 const userStore = useUserStore()
 
+// API 配置状态（可根据实际情况从用户信息中读取）
+const hasApiConfigured = ref(false)
+
 // 模拟数据（后续可从API获取）
 const healthDays = ref(15)
 const workoutCount = ref(23)
@@ -193,6 +233,76 @@ onMounted(async () => {
 .home-view {
   width: 100%;
   min-height: 100%;
+}
+
+/* 使用指南提示 */
+.usage-guide-alert {
+  margin-bottom: 24px;
+  border-radius: 16px;
+  border: none;
+  background: linear-gradient(135deg, #fff5e6 0%, #ffe4cc 100%);
+  
+  :deep(.el-alert__content) {
+    width: 100%;
+  }
+  
+  :deep(.el-alert__title) {
+    font-size: 18px;
+    font-weight: 600;
+    color: #d97706;
+    margin-bottom: 16px;
+  }
+  
+  .guide-content {
+    .guide-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    
+    .guide-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      
+      .step-number {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 16px;
+        flex-shrink: 0;
+      }
+      
+      .step-text {
+        flex: 1;
+        
+        strong {
+          font-size: 15px;
+          color: #92400e;
+          display: block;
+          margin-bottom: 4px;
+        }
+        
+        p {
+          margin: 0;
+          font-size: 14px;
+          color: #78350f;
+          line-height: 1.6;
+          
+          :deep(.el-link) {
+            font-weight: 600;
+            font-size: 14px;
+          }
+        }
+      }
+    }
+  }
 }
 
 /* 欢迎横幅 */

@@ -7,9 +7,28 @@
 | 文件名 | 类型 | 用途 | 必须执行 |
 |--------|------|------|----------|
 | `00_init.sql` | DDL | 创建数据库、设置字符集 | ✅ 是 |
-| `01_schema.sql` | DDL | 创建所有数据表结构 | ✅ 是 |
-| `02_init_data.sql` | DML | 插入初始配置（LLM、智能体） | ✅ 是 |
-| `test_data.sql` | DML | 插入测试用户和示例数据 | ❌ 可选 |
+| `01_schema.sql` | DDL | 创建所有数据表结构（含RBAC权限系统） | ✅ 是 |
+| `02_init_data.sql` | DML | 插入初始数据（LLM配置、RBAC数据、测试用户） | ✅ 是 |
+
+### 💡 数据库结构
+
+**19个数据表，分为7大模块：**
+- 用户模块: `user`, `health_profile`
+- 健康记录: `weight_log`, `workout_log`, `sleep_log`, `diet_log`
+- 智能体: `agent`, `agent_config`
+- 对话: `conversation`, `message`
+- 计划: `health_plan`
+- LLM配置: `llm_provider`, `llm_model`
+- RBAC权限: `role`, `permission`, `menu`, `user_role`, `role_permission`, `role_menu`
+
+### 🔑 测试账号
+
+初始化完成后，可使用以下账号登录：
+
+| 角色 | 邮箱 | 密码 | 权限说明 |
+|------|------|------|----------|
+| 管理员 | `admin@fitpulse.com` | `Admin123!` | 拥有所有菜单和权限（含系统管理） |
+| 普通用户 | `user@fitpulse.com` | `User123!` | 基础权限，无系统管理菜单 |
 
 ## 🚀 部署步骤
 
@@ -19,22 +38,24 @@
 # 步骤 1: 创建数据库
 mysql -u root -p < 00_init.sql
 
-# 步骤 2: 创建表结构
+# 步骤 2: 创建表结构（含RBAC）
 mysql -u root -p < 01_schema.sql
 
-# 步骤 3: 插入初始配置数据
+# 步骤 3: 插入初始数据（含测试用户）
 mysql -u root -p < 02_init_data.sql
 
-# 完成！系统已可用
+# 完成！系统已可用，使用上述测试账号登录
 ```
 
 ### 开发/测试环境部署
 
-```bash
-# 步骤 1-3: 同上
+开发环境使用相同的3个文件即可，无需额外的测试数据文件：
 
-# 步骤 4: 插入测试数据（可选）
-mysql -u root -p < test_data.sql
+```bash
+# 执行基本的3个文件（已包含测试账号）
+mysql -u root -p < 00_init.sql
+mysql -u root -p < 01_schema.sql
+mysql -u root -p < 02_init_data.sql
 ```
 
 ### PowerShell 一键部署
@@ -44,13 +65,9 @@ mysql -u root -p < test_data.sql
 Get-Content .\00_init.sql | mysql -u root -p
 Get-Content .\01_schema.sql | mysql -u root -p
 Get-Content .\02_init_data.sql | mysql -u root -p
-Get-Content .\test_data.sql | mysql -u root -p  # 可选
 
-# 方式二：一条命令全部执行（生产环境）
+# 方式二：一条命令全部执行
 Get-Content .\00_init.sql, .\01_schema.sql, .\02_init_data.sql | mysql -u root -p
-
-# 方式三：包含测试数据
-Get-Content .\00_init.sql, .\01_schema.sql, .\02_init_data.sql, .\test_data.sql | mysql -u root -p
 ```
 
 ### Docker MySQL 部署
@@ -75,82 +92,78 @@ docker exec -i mysql8-demo mysql -u root -p123456 < 02_init_data.sql
 - 独立的数据库创建脚本
 - 可单独执行用于重建数据库
 
-### 01_schema.sql - 表结构定义
+### 01_schema.sql - 表结构定义（含RBAC）
 
 **包含内容**:
-- 创建 13 张数据表：
-  - **用户模块**: `user`, `health_profile`
-  - **健康记录**: `weight_log`, `workout_log`, `sleep_log`, `diet_log`
-  - **智能体模块**: `agent`, `agent_config`
-  - **对话模块**: `conversation`, `message`
-  - **计划模块**: `health_plan`
-  - **LLM 配置**: `llm_provider`, `llm_model`
+- 创建 **19 张数据表**（7大模块）：
+  - **用户模块** (2表): `user`, `health_profile`
+  - **健康记录** (4表): `weight_log`, `workout_log`, `sleep_log`, `diet_log`
+  - **智能体模块** (2表): `agent`, `agent_config`
+  - **对话模块** (2表): `conversation`, `message`
+  - **计划模块** (1表): `health_plan`
+  - **LLM配置** (2表): `llm_provider`, `llm_model`
+  - **RBAC权限系统** (6表): `role`, `permission`, `menu`, `user_role`, `role_permission`, `role_menu`
 
 **特点**:
 - 纯 DDL 语句，不包含任何数据
-- 可重复执行（使用 `IF NOT EXISTS`）
-- 支持外键约束和索引
+- 使用 `DROP TABLE IF EXISTS` 支持重复执行
+- 支持外键约束和多种索引
+- 用户表支持软删除（deleted字段）
 - 结构化分区注释
 
-### 02_init_data.sql - 初始配置
+### 02_init_data.sql - 初始化数据（含测试用户）
 
 **包含内容**:
-- **LLM 提供商**: 阿里云百炼（默认启用）、OpenAI（备用）
-- **LLM 模型**: 
-  - 通义千问系列: qwen-plus（默认）、qwen-turbo、qwen-max、qwen-long
-  - GPT 系列: gpt-4o、gpt-4o-mini、gpt-3.5-turbo
-- **预置智能体**: 3 个系统智能体
-  1. AI 健康助手（综合健康咨询）
-  2. 饮食营养顾问（饮食分析）
-  3. 睡眠改善顾问（睡眠优化）
+- **LLM提供商** (5个): OpenAI、Azure OpenAI、智谱AI、百川智能、阿里通义千问
+- **LLM模型** (10个): 
+  - OpenAI: GPT-4, GPT-4 Turbo, GPT-3.5 Turbo
+  - 智谱AI: GLM-4, GLM-3-Turbo
+  - 百川: Baichuan2-Turbo, Baichuan2-Turbo-192K
+  - 通义千问: Qwen-Turbo, Qwen-Plus, Qwen-Max
+- **RBAC角色** (2个): ROLE_ADMIN (管理员), ROLE_USER (普通用户)
+- **RBAC权限** (22个): 覆盖用户、健康、智能体、对话、计划、知识库、系统管理
+- **RBAC菜单** (11个): 6个顶级菜单 + 5个子菜单
+- **测试用户** (2个):
+  - admin@fitpulse.com (Admin123!) - 管理员，拥有所有权限
+  - user@fitpulse.com (User123!) - 普通用户，基础权限
+- **健康档案**: 为两个测试用户创建初始档案
 
 **特点**:
-- 系统运行必需的配置
-- 使用 `ON DUPLICATE KEY UPDATE`，可重复执行
-- 包含查询语句，执行后显示配置结果
-
-### test_data.sql - 测试数据
-
-**包含内容**:
-- 5 个测试用户（密码: `password123`）
-- 健康档案和历史记录（体重、运动、睡眠、饮食）
-- 4 个额外智能体
-- 示例对话和消息
-- 健康计划数据
-
-**特点**:
-- 仅用于开发和测试
-- 生产环境不要执行
-- 包含完整的用户使用场景
+- 系统运行必需的配置 + 测试账号
+- 密码使用BCrypt哈希（与后端加密算法一致）
+- 包含完整的RBAC权限体系
+- 执行后即可使用测试账号登录系统
 
 ## ⚙️ 配置修改
 
-### 修改阿里云百炼 API Key
+### 修改测试用户密码
 
-编辑 `02_init_data.sql`，找到第 17 行：
+如需修改测试用户密码，需要通过后端API注册新用户，然后从数据库获取BCrypt哈希值：
+
+1. 启动后端服务
+2. 调用 `/api/v1/auth/register` 注册临时用户
+3. 从数据库查询 `password_hash` 字段
+4. 将哈希值更新到 `02_init_data.sql` 的用户插入语句中
+
+### 添加新的LLM提供商
+
+在 `02_init_data.sql` 的LLM提供商插入部分添加：
 
 ```sql
-'your-sk-api',  -- 请修改为您的 API Key
+INSERT INTO `llm_provider` 
+(`name`, `code`, `api_base_url`, `api_key`, `description`, `is_enabled`, `sort_order`) 
+VALUES ('新提供商', 'new_provider', 'https://api.example.com', 'your-api-key', '描述', 1, 10);
 ```
 
-替换为您自己的 API Key。
+### 添加新的LLM模型
 
-### 切换到 OpenAI
-
-1. 编辑 `02_init_data.sql`
-2. 在 OpenAI 提供商配置中填入 API Key（第 29 行）
-3. 将状态改为 `ENABLED`，将阿里云改为 `DISABLED`
-4. 修改默认模型：将 gpt-4o 的 `is_default` 改为 1，qwen-plus 改为 0
-
-### 添加新的智能体
-
-在 `02_init_data.sql` 的智能体插入部分添加：
+在 `02_init_data.sql` 的LLM模型插入部分添加：
 
 ```sql
-INSERT INTO `agent` (`id`, `name`, `category`, `description`, ...)
-VALUES (4, '新智能体名称', 'GENERAL', '描述...', ...);
-
-INSERT INTO `agent_config` (`agent_id`, `system_prompt`, ...)
+INSERT INTO `llm_model` 
+(`provider_id`, `model_name`, `model_code`, `description`, `max_tokens`, 
+ `supports_function_calling`, `supports_vision`, `is_enabled`, `sort_order`) 
+VALUES (1, '模型名称', 'model-code', '描述', 8192, 1, 0, 1, 20);
 VALUES (4, '系统提示词...', ...);
 ```
 

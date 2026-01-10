@@ -1,0 +1,29 @@
+# ============================================================
+# FitPulse Backend - 生产环境配置（Docker）
+# ============================================================
+# 说明：
+# 1. 本文件仅覆盖需要在 Docker 环境中修改的配置
+# 2. 通过 SPRING_PROFILES_ACTIVE=prod 激活
+# 3. 主要修改：数据库主机名从 localhost 改为 mysql
+# ============================================================
+
+spring:
+  # 数据库配置 - Docker 环境使用服务名
+  datasource:
+    url: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:fitpulse_db}?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+  
+  # Redis 配置 - Docker 环境使用服务名
+  data:
+    redis:
+      host: redis
+      port: 6379
+
+# 日志配置 - 生产环境减少日志输出
+logging:
+  level:
+    root: INFO
+    com.example.backend: INFO
+
+# MinIO 配置 - Docker 环境使用服务名
+minio:
+  endpoint: http://minio:9000

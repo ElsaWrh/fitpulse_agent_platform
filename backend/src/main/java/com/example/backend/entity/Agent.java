@@ -3,6 +3,7 @@ package com.example.backend.entity;
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
@@ -15,28 +16,33 @@ public class Agent {
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    private String name;
+    private Long userId;
 
-    private String category;
+    private String name;
 
     private String description;
 
     private String avatarUrl;
 
-    private String visibility;
+    private String systemPrompt;
+
+    private String greetingMessage;
+
+    private Long llmProviderId;
+
+    private Long llmModelId;
+
+    private BigDecimal temperature;
+
+    private Integer maxTokens;
 
     private String status;
 
-    private Long createdBy;
-
-    private Integer usageCount;
+    private Boolean isPublic;
 
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
 
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updatedAt;
-
-    @TableLogic
-    private Integer deleted;
 }

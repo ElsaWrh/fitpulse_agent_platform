@@ -21,9 +21,9 @@ public class Message {
 
     private String content;
 
-    private Long llmModelId;
+    private Integer tokens;
 
-    private String kbReferences;
+    private String modelName;
 
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;

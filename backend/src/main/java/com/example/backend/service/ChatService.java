@@ -47,9 +47,6 @@ public class ChatService {
     @Value("${openai.base-url:https://api.openai.com/v1/}")
     private String baseUrl;
 
-    @Value("${openai.model:gpt-4o}")
-    private String defaultModel;
-
     @Value("${openai.max-tokens:2048}")
     private Integer maxTokens;
 
@@ -96,6 +93,7 @@ public class ChatService {
 
         // 2. 获取智能体配置
         String systemPrompt = getSystemPrompt(request.getAgentId());
+        Long modelId = getLlmModelId(request.getAgentId());
 
         // 3. 构建消息列表
         List<ChatMessage> messages = new ArrayList<>();
@@ -127,7 +125,7 @@ public class ChatService {
         ChatResponse.TokenUsage tokenUsage = null;
 
         try {
-            ChatCompletionResult result = callOpenAI(messages);
+            ChatCompletionResult result = callOpenAI(messages, modelId);
             aiResponse = result.getChoices().get(0).getMessage().getContent();
 
             if (result.getUsage() != null) {
@@ -188,12 +186,12 @@ public class ChatService {
             return presetConfig.systemPrompt;
         }
 
-        // 从数据库获取
+        // 从数据库获取 Agent 的 systemPrompt
         try {
             Long id = Long.parseLong(agentId);
-            AgentConfig config = agentService.getAgentConfig(id);
-            if (config != null && config.getSystemPrompt() != null) {
-                return config.getSystemPrompt();
+            Agent agent = agentService.getAgentById(id);
+            if (agent != null && agent.getSystemPrompt() != null) {
+                return agent.getSystemPrompt();
             }
         } catch (Exception e) {
             log.warn("获取智能体配置失败: {}", e.getMessage());
@@ -204,24 +202,48 @@ public class ChatService {
     }
 
     /**
+     * 获取智能体配置的LLM模型ID
+     */
+    private Long getLlmModelId(String agentId) {
+        // 预置智能体使用默认模型
+        PresetAgentConfig presetConfig = PRESET_AGENTS.get(agentId);
+        if (presetConfig != null) {
+            return null; // 使用默认模型
+        }
+
+        // 从数据库获取
+        try {
+            Long id = Long.parseLong(agentId);
+            Agent agent = agentService.getAgentById(id);
+            if (agent != null && agent.getLlmModelId() != null) {
+                return agent.getLlmModelId();
+            }
+        } catch (Exception e) {
+            log.warn("获取智能体LLM模型失败: {}", e.getMessage());
+        }
+
+        return null; // 使用默认模型
+    }
+
+    /**
      * 调用 OpenAI API
      */
-    private ChatCompletionResult callOpenAI(List<ChatMessage> messages) {
-        // 优先从数据库获取 API Key
+    private ChatCompletionResult callOpenAI(List<ChatMessage> messages, Long agentModelId) {
+        // 优先使用智能体配置的模型
         String effectiveApiKey = null;
-        String effectiveModel = defaultModel;
+        String effectiveModel = null;
         String effectiveBaseUrl = baseUrl;
 
         try {
-            LlmService.LlmModelWithProvider modelWithProvider = llmService.getModelWithProvider(null);
+            LlmService.LlmModelWithProvider modelWithProvider = llmService.getModelWithProvider(agentModelId);
             if (modelWithProvider != null) {
                 effectiveApiKey = modelWithProvider.provider().getApiKey();
-                effectiveModel = modelWithProvider.model().getModelName();
+                effectiveModel = modelWithProvider.model().getModelCode();
                 if (modelWithProvider.provider().getApiBaseUrl() != null) {
                     effectiveBaseUrl = modelWithProvider.provider().getApiBaseUrl();
                 }
-                log.info("使用数据库配置 - Provider: {}, Model: {}",
-                        modelWithProvider.provider().getName(), effectiveModel);
+                log.info("使用配置 - Provider: {}, Model: {}, BaseURL: {}",
+                        modelWithProvider.provider().getName(), effectiveModel, effectiveBaseUrl);
             }
         } catch (Exception e) {
             log.warn("从数据库获取 LLM 配置失败: {}", e.getMessage());
@@ -238,7 +260,11 @@ public class ChatService {
         }
 
         if (effectiveApiKey == null || effectiveApiKey.isEmpty()) {
-            throw new RuntimeException("OpenAI API Key 未配置，请在数据库 llm_provider 表中设置 api_key");
+            throw new RuntimeException("LLM API Key 未配置，请在个人中心配置 API 密钥");
+        }
+
+        if (effectiveModel == null || effectiveModel.isEmpty()) {
+            throw new RuntimeException("LLM 模型未配置，请为智能体选择一个模型");
         }
 
         // 判断是否使用自定义 Base URL（阿里云百炼等）
@@ -270,13 +296,13 @@ public class ChatService {
         String url = baseUrl;
         // 自动修正旧的 API Base URL
         if (url.contains("dashscope.aliyuncs.com/api/")) {
-            url = url.replace("/api/", "/compatible-mode/");
+            url = url.replace("/api/v1", "/compatible-mode/v1");
             log.warn("自动修正 API Base URL: {} -> {}", baseUrl, url);
         }
         if (!url.endsWith("/")) {
             url += "/";
         }
-        url += "v1/chat/completions";
+        url += "chat/completions";
 
         log.info("🔍 调用 LLM API:");
         log.info("  URL: {}", url);

@@ -122,7 +122,7 @@
 
             <el-form-item label="邮箱">
               <el-input 
-                v-model="userStore.userInfo.email" 
+                :value="userStore.userInfo?.email || ''" 
                 disabled 
                 size="large"
               >
@@ -305,6 +305,53 @@
             </span>
           </div>
         </div>
+
+        <!-- RBAC权限测试区域 -->
+        <div class="form-card" style="margin-top: 20px;">
+          <div class="card-header">
+            <h3>权限测试</h3>
+            <p>测试RBAC权限控制功能</p>
+          </div>
+
+          <div class="permission-test">
+            <el-alert
+              title="权限测试说明"
+              type="info"
+              :closable="false"
+              style="margin-bottom: 20px;"
+            >
+              <p>普通用户点击"管理员操作"按钮会提示权限不足</p>
+              <p>只有管理员才能执行删除用户等管理操作</p>
+            </el-alert>
+
+            <div class="test-buttons">
+              <el-button type="primary" @click="testAdminOperation">
+                <el-icon><Lock /></el-icon>
+                管理员操作（需要ROLE_ADMIN角色）
+              </el-button>
+              <el-button type="danger" @click="testDeleteUser">
+                <el-icon><Delete /></el-icon>
+                删除用户（需要user:delete权限）
+              </el-button>
+            </div>
+
+            <!-- 显示当前用户的权限列表 -->
+            <div class="permissions-display" v-if="userStore.permissions.length > 0">
+              <h4>当前用户拥有的权限：</h4>
+              <el-tag 
+                v-for="perm in userStore.permissions.slice(0, 10)" 
+                :key="perm.id"
+                style="margin: 5px;"
+                size="small"
+              >
+                {{ perm.permissionCode }}
+              </el-tag>
+              <span v-if="userStore.permissions.length > 10" style="color: #999;">
+                ...共{{ userStore.permissions.length }}个权限
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -314,6 +361,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useUserStore } from '@/stores/user'
 import { updateUserProfileAPI } from '@/api/auth'
+import { testAdminAPI, testDeleteUserAPI } from '@/api/rbac'
 import { getLLMProviders, getLLMModels, updateProviderApiKey, testLLMConnection } from '@/api/llm'
 import { ElMessage } from 'element-plus'
 import { 
@@ -325,7 +373,8 @@ import {
   ScaleToOriginal, 
   Timer, 
   Aim,
-  Connection
+  Connection,
+  Delete
 } from '@element-plus/icons-vue'
 
 const userStore = useUserStore()
@@ -354,8 +403,37 @@ const savingProvider = ref(null)
 const testingConnection = ref(false)
 const connectionTestResult = ref('')
 
+// 权限测试函数
+const testAdminOperation = async () => {
+  try {
+    const result = await testAdminAPI()
+    ElMessage.success(result || '管理员操作成功')
+  } catch (error) {
+    ElMessage.error(error.message || '权限不足：需要管理员角色')
+  }
+}
+
+const testDeleteUser = async () => {
+  try {
+    const result = await testDeleteUserAPI()
+    ElMessage.success(result || '删除用户操作成功')
+  } catch (error) {
+    ElMessage.error(error.message || '权限不足：需要user:delete权限')
+  }
+}
+
 // 加载数据
 onMounted(async () => {
+  // 如果没有用户信息，先加载
+  if (!userStore.userInfo) {
+    try {
+      await userStore.getUserInfo()
+    } catch (error) {
+      console.error('加载用户信息失败:', error)
+      ElMessage.error('加载用户信息失败')
+    }
+  }
+  
   if (userStore.userInfo) {
     const data = {
       nickname: userStore.userInfo.nickname || '',
@@ -859,7 +937,28 @@ const handleUpdate = async () => {
     font-weight: 500;
   }
 }
-
+.permission-test {
+  .test-buttons {
+    display: flex;
+    gap: 12px;
+    margin: 20px 0;
+    flex-wrap: wrap;
+  }
+  
+  .permissions-display {
+    margin-top: 24px;
+    padding: 16px;
+    background: #f9fafb;
+    border-radius: 8px;
+    
+    h4 {
+      font-size: 14px;
+      color: #374151;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+  }
+}
 /* 响应式适配 */
 @media (max-width: 1024px) {
   .profile-content {

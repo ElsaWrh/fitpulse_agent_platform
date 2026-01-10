@@ -3,6 +3,7 @@ package com.example.backend.entity;
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
@@ -19,15 +20,25 @@ public class LlmModel {
 
     private String modelName;
 
-    private String modelType;
-
-    private String displayName;
+    private String modelCode;
 
     private String description;
 
-    private Boolean isDefault;
+    private Integer maxTokens;
 
-    private String status;
+    private Boolean supportsFunctionCalling;
+
+    private Boolean supportsVision;
+
+    @TableField("input_price_per_1k_tokens")
+    private BigDecimal inputPricePer1kTokens;
+
+    @TableField("output_price_per_1k_tokens")
+    private BigDecimal outputPricePer1kTokens;
+
+    private Boolean isEnabled;
+
+    private Integer sortOrder;
 
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;

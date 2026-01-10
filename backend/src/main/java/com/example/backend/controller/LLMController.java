@@ -100,7 +100,7 @@ public class LLMController {
             }
 
             return Result.success("LLM 配置有效：" + modelWithProvider.provider().getName()
-                    + " / " + modelWithProvider.model().getDisplayName());
+                    + " / " + modelWithProvider.model().getModelName());
         } catch (Exception e) {
             log.error("测试 LLM 连接失败", e);
             return Result.error("连接测试失败：" + e.getMessage());

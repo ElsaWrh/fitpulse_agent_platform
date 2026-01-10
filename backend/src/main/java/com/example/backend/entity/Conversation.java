@@ -21,6 +21,8 @@ public class Conversation {
 
     private String title;
 
+    private String summary;
+
     private String status;
 
     private Integer messageCount;

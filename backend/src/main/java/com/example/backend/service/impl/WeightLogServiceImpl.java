@@ -30,9 +30,9 @@ public class WeightLogServiceImpl implements WeightLogService {
         BeanUtils.copyProperties(request, weightLog);
         weightLog.setUserId(userId);
 
-        // 如果没有指定日期，使用当前日期
-        if (weightLog.getRecordDate() == null) {
-            weightLog.setRecordDate(LocalDate.now());
+        // 如果没有指定日期，使用当前时间
+        if (weightLog.getMeasuredAt() == null) {
+            weightLog.setMeasuredAt(java.time.LocalDateTime.now());
         }
 
         weightLogMapper.insert(weightLog);
@@ -47,13 +47,13 @@ public class WeightLogServiceImpl implements WeightLogService {
         wrapper.eq(WeightLog::getUserId, userId);
 
         if (startDate != null) {
-            wrapper.ge(WeightLog::getRecordDate, startDate);
+            wrapper.ge(WeightLog::getMeasuredAt, startDate.atStartOfDay());
         }
         if (endDate != null) {
-            wrapper.le(WeightLog::getRecordDate, endDate);
+            wrapper.le(WeightLog::getMeasuredAt, endDate.atTime(23, 59, 59));
         }
 
-        wrapper.orderByDesc(WeightLog::getRecordDate);
+        wrapper.orderByDesc(WeightLog::getMeasuredAt);
 
         return weightLogMapper.selectList(wrapper);
     }
@@ -64,7 +64,7 @@ public class WeightLogServiceImpl implements WeightLogService {
 
         LambdaQueryWrapper<WeightLog> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(WeightLog::getUserId, userId);
-        wrapper.orderByDesc(WeightLog::getRecordDate);
+        wrapper.orderByDesc(WeightLog::getMeasuredAt);
         wrapper.last("LIMIT 1");
 
         return weightLogMapper.selectOne(wrapper);

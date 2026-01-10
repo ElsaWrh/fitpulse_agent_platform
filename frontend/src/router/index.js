@@ -61,6 +61,11 @@ const router = createRouter({
           path: 'knowledge',
           name: 'knowledge',
           component: () => import('@/views/kb/KnowledgePage.vue')
+        },
+        {
+          path: 'admin',
+          name: 'admin',
+          component: () => import('@/views/AdminView.vue')
         }
       ]
     }

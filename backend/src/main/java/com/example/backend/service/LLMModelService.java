@@ -22,8 +22,8 @@ public class LLMModelService {
      */
     public List<LlmModel> getEnabledModels() {
         LambdaQueryWrapper<LlmModel> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(LlmModel::getStatus, "ENABLED");
-        wrapper.orderByDesc(LlmModel::getIsDefault);
+        wrapper.eq(LlmModel::getIsEnabled, true);
+        wrapper.orderByAsc(LlmModel::getSortOrder);
         return llmModelMapper.selectList(wrapper);
     }
 
