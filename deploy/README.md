@@ -34,6 +34,23 @@ cd /path/to/Health_agent_platform/deploy
 
 ### 步骤 2：启动所有服务
 
+**⚠️ 重要提示：数据库初始化说明**
+
+MySQL 数据库的初始化脚本（`sql/*.sql`）**仅在首次创建数据卷时执行**。如果你：
+- **首次部署**：数据库会自动初始化，创建表结构和初始数据
+- **重新部署**（数据卷已存在）：数据库不会重新初始化，保留原有数据
+
+**如需完全重置数据库（适用于空白环境测试）：**
+```powershell
+# 停止并删除所有容器和数据卷
+docker compose down -v
+
+# 重新启动（会重新初始化数据库）
+docker compose up -d --build
+```
+
+**正常启动命令：**
+
 **Windows PowerShell（推荐方式）:**
 ```powershell
 # 直接使用 docker compose 启动（最简单）
@@ -97,11 +114,11 @@ fitpulse-phpmyadmin   phpmyadmin:latest          Up 2 minutes
 2. 使用以下测试账号登录：
 
 **管理员账号：**
-- 邮箱：`admin@example.com`
+- 邮箱：`admin@fitpulse.com`
 - 密码：`Admin123!`
 
 **普通用户账号：**
-- 邮箱：`user@example.com`  
+- 邮箱：`user@fitpulse.com`  
 - 密码：`User123!`
 
 **或者点击"注册"创建新账号**
@@ -130,9 +147,62 @@ fitpulse-phpmyadmin   phpmyadmin:latest          Up 2 minutes
 - ✅ 配置 API 后与 AI 智能对话
 
 ---
-## 📚 常用命令
 
-### 使用部署脚本（推荐）
+## 📚 日常运维命令
+
+### ⚠️ 重要：数据库初始化机制
+
+**理解 MySQL 容器的数据持久化：**
+
+| 操作 | 命令 | 数据卷 | 数据库行为 |
+|------|------|--------|-----------|
+| 日常重启 | `docker compose restart` | 保留 | 数据不变 |
+| 更新代码 | `docker compose up -d --build` | 保留 | 数据不变 |
+| 停止容器 | `docker compose down` | 保留 | 数据不变 |
+| **完全重置** | `docker compose down -v` | **删除** | **重新初始化** |
+
+**关键点：**
+- 数据库初始化脚本（`sql/01_schema.sql`、`sql/02_init_data.sql`）只在数据卷**首次创建**时执行
+- 只要数据卷存在，即使重新 build 和 up，数据库也不会重新初始化
+- 要重新初始化数据库，必须先删除数据卷：`docker compose down -v`
+
+### 模拟空白电脑部署（完全重置）
+
+**适用场景：**
+- ✅ 在全新的空白电脑上测试部署
+- ✅ 数据库表结构有更新需要重新初始化
+- ✅ 测试数据混乱需要恢复到初始状态
+
+**完整步骤：**
+```powershell
+# 1. 停止并删除所有容器和数据卷（⚠️ 会清空所有数据）
+docker compose down -v
+
+# 2. 验证数据卷已删除（应该没有输出）
+docker volume ls | Select-String "fitpulse"
+
+# 3. 重新启动（自动执行数据库初始化脚本）
+docker compose up -d --build
+
+# 4. 等待30秒让服务完全启动
+Start-Sleep -Seconds 30
+
+# 5. 检查服务状态
+docker compose ps
+
+# 6. 验证数据库已正确初始化（应该看到所有表）
+docker compose exec mysql mysql -uroot -p123456 fitpulse_db -e "SHOW TABLES;"
+
+# 7. 验证初始用户已创建
+docker compose exec mysql mysql -uroot -p123456 fitpulse_db -e "SELECT email FROM user LIMIT 5;"
+```
+
+**预期结果：**
+- 所有表已创建（user, health_profile, agent, conversation 等）
+- 初始用户已存在（admin@fitpulse.com, user@fitpulse.com）
+- 可以用初始账号登录系统
+
+###查看服务状态
 
 **Windows:**
 ```powershell

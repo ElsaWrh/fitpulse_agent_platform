@@ -1,4 +1,4 @@
-# FitPulse 智能健康助手（Health Agent Platform）项目说明文档
+# FitPulse 智能健康助手-项目说明文档
 ## 一、项目简介
 FitPulse 是一个可部署的全栈智能健康助手项目，集成了前端管理端、后端服务、数据库初始化与容器化部署能力，支持通过 LLM API 实现智能问答/健康建议等能力。项目采用 Docker + Docker Compose 进行一键部署，覆盖从数据库建模、后端接口到前端界面与反向代理的完整工程链路。
 
@@ -34,17 +34,32 @@ FitPulse 是一个可部署的全栈智能健康助手项目，集成了前端�
 
 ## 三、项目实现截图
 ### 1）前端首页 / 管理端
+**登录界面**
 ![登录界面](assets/login.png)
+**前端首页**
 ![前端首页](assets/frontend1.png)
-![管理端](assets/frontend2.png)
+**前端首页**
+![前端首页](assets/frontend2.png)
+**管理端**
+![管理端](assets/frontend3.png)
 
 ### 2）智能对话 / LLM 能力展示
-![智能对话或 LLM 调用](assets/chat.png)
+**智能体创建**
+![智能体创建](assets/agent_create.png)
+![智能体创建](assets/agent_create1.png)
+![智能体创建](assets/agent_create2.png)
+**智能对话 LLM 调用**
+![智能对话 LLM 调用](assets/chat1.png)
+![智能对话 LLM 调用](assets/chat2.png)
+![智能对话 LLM 调用](assets/chat3.png)
+
+**LLM的api设置**
+![LLM api设置](assets/api1.png)
+
 
 ### 3）健康档案 / 数据记录（体重/训练/睡眠/饮食）
+**健康档案与记录**
 ![健康档案与记录](assets/profile-logs.png)
-
-
 
 ### 4）数据库表结构（部分）
 ![数据库表结构](assets/db-schema.png)
@@ -145,24 +160,54 @@ DashScope：`DASHSCOPE_API_KEY=...`（可选）
 
 ### 7.2 构建并启动服务
 
-在仓库根目录执行：
+**⚠️ 重要提示：数据库初始化说明**
+
+MySQL 数据库的初始化脚本（`sql/*.sql`）**仅在首次创建数据卷时执行**。
+
+| 场景 | 命令 | 数据库行为 |
+|------|------|-----------| 
+| 首次部署 | `docker compose up -d --build` | ✅ 自动初始化（创建表+初始数据） |
+| 日常重启 | `docker compose restart` | 保留所有数据 |
+| 更新代码 | `docker compose up -d --build` | 保留所有数据 |
+| **完全重置** | `docker compose down -v && docker compose up -d --build` | ✅ 重新初始化数据库 |
+
+**正常启动（在 deploy/ 目录执行）：**
 ```bash
+cd deploy
 docker compose up -d --build
 ```
-启动后查看容器状态
 
+**完全重置数据库（模拟空白电脑部署）：**
+```bash
+cd deploy
+docker compose down -v
+docker compose up -d --build
+```
+
+启动后查看容器状态：
 ```bash
 docker compose ps
 ```
 ### 7.3 访问地址
 
-前端应用：http://localhost
+**等待约 30-60 秒让所有服务完全启动后，打开浏览器访问：**
 
-后端 API：http://localhost:8080/api
+| 服务 | 访问地址 | 说明 |
+|------|---------|------|
+| 🌐 **前端应用** | **http://localhost** | 主应用入口（登录/注册/健康档案/智能对话） |
+| 🔧 **后端 API** | http://localhost:8080/api | RESTful API 接口 |
+| 🗄️ **phpMyAdmin** | http://localhost:8081 | MySQL 数据库管理界面（root/123456） |
+| 📊 **MySQL 数据库** | `localhost:3307` | 数据库连接（用户名: root, 密码: 123456） |
 
-PHPMyAdmin：http://localhost:8081
+**测试账号：**
 
-MySQL：127.0.0.1:3307（账号密码以 .env 为准；默认示例通常为 root/123456）
+**管理员账号：**
+- 邮箱：`admin@fitpulse.com`
+- 密码：`Admin123!`
+
+**普通用户账号：**
+- 邮箱：`user@fitpulse.com`  
+- 密码：`User123!`
 
 ---
 
@@ -203,20 +248,45 @@ docker compose logs -f backend
 # 停止服务（保留数据卷）
 docker compose down
 
-# 停止并删除数据卷（会清空 MySQL 数据）
+**数据库初始化机制：**
+
+`sql/` 目录包含初始化脚本：
+- `01_schema.sql`：创建表结构（19个表）
+- `02_init_data.sql`：插入初始数据（用户、角色、菜单、权限等）
+
+**关键规则：**
+- 初始化脚本**只在首次创建数据卷时执行**
+- `docker compose down` 只删除容器，**保留数据卷**，数据不会丢失
+- `docker compose down -v` 删除容器和数据卷，**重启后会重新初始化**
+**管理员账号：**
+- 邮箱：`admin@fitpulse.com`
+- 密码：`Admin123!`
+- 权限：完整的系统管理权限
+
+**普通用户账号：**
+- 邮箱：`user@fitpulse.com`
+- 密码：`User123!`
+- 权限：健康档案管理、智能对话等基础功能
+
+> **提示：** 初始账号信息保存在 `sql/02_init_data.sql` 中。如需在全新数据库中创建这些账号，请执行 `docker compose down -v && docker compose up -d --build` 重新初始化数据库。
 docker compose down -v
+
+# 2. 验证数据卷已删除
+docker volume ls | grep fitpulse  # Linux/Mac
+docker volume ls | Select-String "fitpulse"  # Windows PowerShell
+
+# 3. 重新启动（自动执行数据库初始化脚本）
+docker compose up -d --build
+
+# 4. 验证数据库已初始化
+docker compose exec mysql mysql -uroot -p123456 fitpulse_db -e "SHOW TABLES;"
 ```
 
----
-
-## 九、演示账号与角色说明
-
-初始化数据位于 `sql/02_init_data.sql`，其中包含基础角色（管理员 / 普通用户）、权限点和菜单。具体账号以 SQL 文件为准，如果你在本地修改了初始化脚本，请以自己修改后的为主。
-
-示例说明（请按实际 SQL 为准，可在 02_init_data.sql 中查阅）：
-
-- 管理员（Admin）：例如 `admin@example.com` / `Admin123!`
-- 普通用户（User）：例如 `user@example.com` / `User123!`
+**预期结果：**
+- 创建 19 个表（user, health_profile, agent, conversation 等）
+- 初始用户已存在（admin@fitpulse.com, user@fitpulse.com）
+- 可以使用初始账号登录系统理员（Admin）：例如 `admin@fitpulse.com` / `Admin123!`
+- 普通用户（User）：例如 `user@fitpulse.com` / `User123!`
 
 > 若仓库未内置具体账号或你已删除初始用户，请在前端“注册 / 登录”页面自行注册账号，再使用新账号登录系统进行演示。
 
