@@ -196,8 +196,8 @@ INSERT INTO `menu`
  `menu_type`, `visible`, `status`, `permission_code`) 
 VALUES
 -- 顶级菜单（6个）
-(1, 0, '首页', 'home', '/home', 'HomeView', 'House', 10, 'MENU', 1, 'ACTIVE', NULL),
-(2, 0, '健康档案', 'health', '/health', 'HealthView', 'DataLine', 20, 'MENU', 1, 'ACTIVE', 'health:view'),
+(1, 0, '首页', 'home', '/', 'HomeView', 'HomeFilled', 10, 'MENU', 1, 'ACTIVE', NULL),
+(2, 0, '健康档案', 'health', '/health', 'HealthView', 'Document', 20, 'MENU', 1, 'ACTIVE', 'health:view'),
 (3, 0, '对话', 'chat', '/chat', 'ChatView', 'ChatDotRound', 30, 'MENU', 1, 'ACTIVE', 'chat:view'),
 (4, 0, '智能体', 'agent', '/agents', NULL, 'Avatar', 40, 'MENU', 1, 'ACTIVE', 'agent:list'),
 (5, 0, '个人中心', 'profile', '/profile', 'ProfileView', 'User', 50, 'MENU', 1, 'ACTIVE', 'user:view-self'),
