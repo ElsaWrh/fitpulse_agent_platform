@@ -1,0 +1,198 @@
+# ==========================================
+# FitPulse Agent Platform - .gitignore
+# ==========================================
+
+# ============ 敏感信息（绝对不能提交）============
+# 环境配置文件（包含密码、API Key）
+.env
+.env.local
+.env.*.local
+deploy/.env
+deploy/.env.prod
+**/.env
+
+# 数据库密码配置
+**/application-local.yml
+**/application-local.properties
+
+# API Key 和密钥
+**/*secret*.yml
+**/*secret*.json
+**/*password*.txt
+**/*apikey*.txt
+
+# ============ 依赖和构建产物 ============
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Java/Maven
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.iml
+.mvn/
+mvnw
+mvnw.cmd
+
+# 前端构建产物
+dist/
+dist-ssr/
+*.local
+
+# ============ IDE 和编辑器 ============
+# VSCode
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json.example
+
+# IntelliJ IDEA
+.idea/
+*.iws
+*.ipr
+out/
+.idea_modules/
+
+# Eclipse
+.classpath
+.project
+.settings/
+bin/
+
+# NetBeans
+nbproject/
+nbbuild/
+nbdist/
+.nb-gradle/
+
+# ============ 操作系统 ============
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# Linux
+*~
+.directory
+.Trash-*
+
+# ============ 日志和临时文件 ============
+# 日志
+logs/
+*.log
+log/
+*.log.*
+npm-debug.log*
+yarn-debug.log*
+
+# 临时文件
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+.cache/
+
+# ============ 测试和覆盖率 ============
+# 测试覆盖率报告
+coverage/
+*.lcov
+.nyc_output/
+test-results/
+junit.xml
+
+# ============ Docker ============
+# Docker 数据卷（持久化数据不提交）
+docker-data/
+mysql-data/
+postgres-data/
+
+# Docker Compose override（本地开发配置）
+docker-compose.override.yml
+
+# ============ 数据库 ============
+# 本地数据库文件
+*.sqlite
+*.sqlite3
+*.db
+
+# 数据库备份
+*.sql.backup
+*.dump
+backup/
+
+# ============ 文件上传 ============
+# 用户上传的文件（开发测试数据）
+uploads/
+upload-temp/
+files/
+media/
+
+# ============ 其他 ============
+# 打包压缩文件
+*.zip
+*.tar
+*.tar.gz
+*.rar
+*.7z
+
+# 证书文件（如果有）
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+
+# 热重载
+*.hot-update.json
+*.hot-update.js
+
+# TypeScript
+*.tsbuildinfo
+
+# Python (如果有 Python 脚本)
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+venv/
+ENV/
+
+# ============ 保留示例文件 ============
+# 这些文件要提交，作为配置模板
+!.env.example
+!.env.template
+!docker-compose.yml
+!Dockerfile
+!**/Dockerfile
+!README.md
+
+# ============ 项目特定排除 ============
+# CodeHubot 演示代码（如果不需要可以排除）
+# CodeHubot/
+
+# 测试数据脚本（根据需要调整）
+**/test_*.sql
+**/demo_*.sql
+
+# API 测试文件
+**/*.http
+**/*.rest
+*.http.local

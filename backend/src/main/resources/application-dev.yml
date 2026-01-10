@@ -27,7 +27,7 @@ minio:
 
 # OpenAI 配置
 openai:
-  api-key: ${OPENAI_API_KEY}
+  api-key: ${OPENAI_API_KEY:sk-test-key-for-local-development}
   base-url: https://api.openai.com/v1
   model: gpt-4o
   max-tokens: 2048

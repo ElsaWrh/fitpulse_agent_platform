@@ -17,13 +17,17 @@ public class LlmProvider {
 
     private String name;
 
+    private String code;
+
     private String apiBaseUrl;
 
     private String apiKey;
 
-    private String providerType;
+    private String description;
 
-    private String status;
+    private Boolean isEnabled;
+
+    private Integer sortOrder;
 
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;

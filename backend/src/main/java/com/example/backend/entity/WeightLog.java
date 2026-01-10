@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
@@ -19,19 +18,18 @@ public class WeightLog {
 
     private Long userId;
 
-    private LocalDate recordDate;
+    private LocalDateTime measuredAt;
 
     private BigDecimal weight;
 
     private BigDecimal bmi;
 
-    private BigDecimal bodyFat;
+    private BigDecimal bodyFatPercentage;
+
+    private BigDecimal muscleMass;
 
     private String notes;
 
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
-
-    @TableField(fill = FieldFill.INSERT_UPDATE)
-    private LocalDateTime updatedAt;
 }

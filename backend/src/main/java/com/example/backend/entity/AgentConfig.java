@@ -17,21 +17,13 @@ public class AgentConfig {
 
     private Long agentId;
 
-    private String systemPrompt;
+    @TableField("config_key")
+    private String configKey;
 
-    private String languageStyle;
+    @TableField("config_value")
+    private String configValue;
 
-    private Boolean canReadProfile;
-
-    private Boolean canReadWorkouts;
-
-    private Boolean canReadDietLogs;
-
-    private String kbScope;
-
-    private Long llmModelId;
-
-    private String llmParams;
+    private String description;
 
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;

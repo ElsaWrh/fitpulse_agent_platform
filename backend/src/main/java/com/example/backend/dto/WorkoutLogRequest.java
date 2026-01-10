@@ -2,6 +2,7 @@ package com.example.backend.dto;
 
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 /**
@@ -12,11 +13,19 @@ public class WorkoutLogRequest {
 
     private String workoutType;
 
-    private Integer duration;
+    private String workoutName;
 
-    private Integer calories;
+    private Integer durationMinutes;
+
+    private Integer caloriesBurned;
+
+    private String intensity;
+
+    private BigDecimal distance;
+
+    private Integer heartRateAvg;
 
     private LocalDate workoutDate;
 
-    private String note;
+    private String notes;
 }

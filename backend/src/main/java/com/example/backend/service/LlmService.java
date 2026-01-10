@@ -29,7 +29,8 @@ public class LlmService {
     public List<LlmProvider> getEnabledProviders() {
         return providerMapper.selectList(
                 new LambdaQueryWrapper<LlmProvider>()
-                        .eq(LlmProvider::getStatus, "ENABLED"));
+                        .eq(LlmProvider::getIsEnabled, true)
+                        .orderByAsc(LlmProvider::getSortOrder));
     }
 
     /**
@@ -45,8 +46,8 @@ public class LlmService {
     public LlmModel getDefaultModel() {
         return modelMapper.selectOne(
                 new LambdaQueryWrapper<LlmModel>()
-                        .eq(LlmModel::getIsDefault, true)
-                        .eq(LlmModel::getStatus, "ENABLED")
+                        .eq(LlmModel::getIsEnabled, true)
+                        .orderByAsc(LlmModel::getSortOrder)
                         .last("LIMIT 1"));
     }
 
@@ -57,7 +58,7 @@ public class LlmService {
         return modelMapper.selectOne(
                 new LambdaQueryWrapper<LlmModel>()
                         .eq(LlmModel::getId, id)
-                        .eq(LlmModel::getStatus, "ENABLED"));
+                        .eq(LlmModel::getIsEnabled, true));
     }
 
     /**
@@ -111,7 +112,7 @@ public class LlmService {
         return modelMapper.selectList(
                 new LambdaQueryWrapper<LlmModel>()
                         .eq(LlmModel::getProviderId, providerId)
-                        .eq(LlmModel::getStatus, "ENABLED"));
+                        .eq(LlmModel::getIsEnabled, true));
     }
 
     /**

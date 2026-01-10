@@ -169,11 +169,11 @@
             <div v-if="selectedModel" class="model-info">
               <el-descriptions :column="2" border size="small">
                 <el-descriptions-item label="模型名称">{{ selectedModel.modelName }}</el-descriptions-item>
-                <el-descriptions-item label="显示名称">{{ selectedModel.displayName }}</el-descriptions-item>
-                <el-descriptions-item label="类型">{{ selectedModel.modelType }}</el-descriptions-item>
+                <el-descriptions-item label="模型代码">{{ selectedModel.modelCode }}</el-descriptions-item>
+                <el-descriptions-item label="最大Token">{{ selectedModel.maxTokens || '未设置' }}</el-descriptions-item>
                 <el-descriptions-item label="状态">
-                  <el-tag :type="selectedModel.status === 'ENABLED' ? 'success' : 'info'" size="small">
-                    {{ selectedModel.status === 'ENABLED' ? '已启用' : '已禁用' }}
+                  <el-tag :type="selectedModel.isEnabled ? 'success' : 'info'" size="small">
+                    {{ selectedModel.isEnabled ? '已启用' : '已禁用' }}
                   </el-tag>
                 </el-descriptions-item>
                 <el-descriptions-item v-if="selectedModel.description" label="描述" :span="2">
@@ -458,22 +458,31 @@ const loadAgentData = async () => {
     formData.visibility = agent.visibility
     agentStatus.value = agent.status
 
-    // 加载配置信息
-    const config = await getAgentConfig(route.params.id)
+    // 从 Agent 对象获取核心配置
+    configData.systemPrompt = agent.systemPrompt || ''
+    configData.llmModelId = agent.llmModelId
 
-    configData.systemPrompt = config.systemPrompt || ''
-    configData.languageStyle = config.languageStyle || 'ENCOURAGING'
-    configData.llmModelId = config.llmModelId
-    configData.customSafetyPrompt = config.customSafetyPrompt || ''
+    // 加载扩展配置信息（key-value 结构）
+    const configs = await getAgentConfig(route.params.id)
+    
+    // 从配置列表中提取值
+    const configMap = {}
+    configs.forEach(item => {
+      configMap[item.configKey] = item.configValue
+    })
+
+    configData.languageStyle = configMap.languageStyle || 'ENCOURAGING'
+    configData.customSafetyPrompt = configMap.customSafetyPrompt || ''
 
     // 加载权限
     permissions.value = []
-    if (config.canReadProfile) permissions.value.push('read_profile')
-    if (config.canReadLogs) permissions.value.push('read_logs')
-    if (config.canWritePlan) permissions.value.push('write_plan')
+    if (configMap.canReadProfile === 'true') permissions.value.push('read_profile')
+    if (configMap.canReadLogs === 'true') permissions.value.push('read_logs')
+    if (configMap.canWritePlan === 'true') permissions.value.push('write_plan')
 
     // 加载知识库绑定
-    selectedKBCategories.value = config.kbScope || []
+    const kbScope = configMap.kbScope ? JSON.parse(configMap.kbScope) : []
+    selectedKBCategories.value = kbScope
   } catch (error) {
     console.error('加载智能体数据失败:', error)
     ElMessage.error('加载智能体数据失败')

@@ -16,7 +16,7 @@ import jakarta.validation.Valid;
  * 认证控制器
  */
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/v1/auth")
 @RequiredArgsConstructor
 public class AuthController {
 

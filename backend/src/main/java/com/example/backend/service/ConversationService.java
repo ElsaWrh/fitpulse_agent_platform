@@ -89,12 +89,12 @@ public class ConversationService {
      * 添加消息到会话
      */
     @Transactional
-    public Message addMessage(Long conversationId, String role, String content, Long llmModelId) {
+    public Message addMessage(Long conversationId, String role, String content, String modelName) {
         Message message = new Message();
         message.setConversationId(conversationId);
         message.setRole(role);
         message.setContent(content);
-        message.setLlmModelId(llmModelId);
+        message.setModelName(modelName);
         messageMapper.insert(message);
 
         // 更新会话统计

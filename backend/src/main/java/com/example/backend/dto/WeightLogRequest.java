@@ -3,7 +3,7 @@ package com.example.backend.dto;
 import lombok.Data;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 /**
  * 体重记录请求DTO
@@ -13,7 +13,11 @@ public class WeightLogRequest {
 
     private BigDecimal weight;
 
-    private LocalDate recordDate;
+    private LocalDateTime measuredAt;
 
-    private String note;
+    private BigDecimal bodyFatPercentage;
+
+    private BigDecimal muscleMass;
+
+    private String notes;
 }

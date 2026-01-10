@@ -3,6 +3,7 @@ package com.example.backend.entity;
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -22,19 +23,24 @@ public class WorkoutLog {
 
     private String workoutType;
 
+    private String workoutName;
+
     private Integer durationMinutes;
 
     private Integer caloriesBurned;
 
     private String intensity;
 
-    private String status;
+    private BigDecimal distance;
+
+    private Integer heartRateAvg;
 
     private String notes;
 
+    private LocalDateTime startedAt;
+
+    private LocalDateTime completedAt;
+
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
-
-    @TableField(fill = FieldFill.INSERT_UPDATE)
-    private LocalDateTime updatedAt;
 }

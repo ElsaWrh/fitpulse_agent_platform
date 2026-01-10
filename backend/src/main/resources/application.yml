@@ -1,0 +1,156 @@
+# ============================================================
+# FitPulse Backend - 主配置文件
+# ============================================================
+# 说明：
+# 1. 本文件包含所有环境的公共配置
+# 2. 使用 ${VAR:default} 语法支持环境变量
+# 3. 默认值为本地开发环境配置
+# 4. 通过 SPRING_PROFILES_ACTIVE 切换环境（dev/prod）
+# ============================================================
+
+# ============================================================
+# Spring Boot 基础配置
+# ============================================================
+spring:
+  application:
+    name: fitpulse-backend
+  
+  # Profile 配置 - 支持环境变量切换
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  
+  # 数据库配置 - 支持环境变量
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/fitpulse_db?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true}
+    username: ${SPRING_DATASOURCE_USERNAME:root}
+    password: ${SPRING_DATASOURCE_PASSWORD:123456}
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 20
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+  
+  # Redis 配置 - 支持环境变量
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: ${REDIS_DATABASE:0}
+      timeout: 3000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+          max-wait: -1ms
+  
+  # Jackson 序列化配置
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+    default-property-inclusion: non_null
+  
+  # 文件上传配置
+  servlet:
+    multipart:
+      max-file-size: ${MAX_FILE_SIZE:10MB}
+      max-request-size: ${MAX_REQUEST_SIZE:50MB}
+
+# ============================================================
+# 服务器配置
+# ============================================================
+server:
+  port: ${SERVER_PORT:8080}
+  servlet:
+    context-path: ${CONTEXT_PATH:/api}
+  tomcat:
+    uri-encoding: UTF-8
+    max-threads: 200
+    accept-count: 100
+
+# ============================================================
+# MyBatis-Plus 配置
+# ============================================================
+mybatis-plus:
+  mapper-locations: classpath*:/mapper/**/*.xml
+  type-aliases-package: com.example.backend.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    cache-enabled: false
+  global-config:
+    db-config:
+      id-type: auto
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+# ============================================================
+# JWT 配置
+# ============================================================
+jwt:
+  secret: ${JWT_SECRET:fitpulse-secret-key-2024-health-management-platform}
+  expiration: ${JWT_EXPIRATION:86400000}  # 24小时（毫秒）
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}  # 7天（毫秒）
+  header: Authorization
+  prefix: Bearer
+
+# ============================================================
+# MinIO 对象存储配置
+# ============================================================
+minio:
+  endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+  access-key: ${MINIO_ACCESS_KEY:minioadmin}
+  secret-key: ${MINIO_SECRET_KEY:minioadmin}
+  bucket-name: ${MINIO_BUCKET_NAME:fitpulse-dev}
+
+# ============================================================
+# OpenAI / LLM API 配置
+# ============================================================
+openai:
+  api-key: ${OPENAI_API_KEY:}
+  base-url: ${OPENAI_BASE_URL:https://api.openai.com/v1}
+  model: ${OPENAI_MODEL:gpt-4o}
+  max-tokens: ${OPENAI_MAX_TOKENS:2048}
+  temperature: ${OPENAI_TEMPERATURE:0.7}
+
+# ============================================================
+# 阿里云百炼 DashScope 配置
+# ============================================================
+dashscope:
+  api-key: ${DASHSCOPE_API_KEY:}
+  base-url: ${DASHSCOPE_BASE_URL:https://dashscope.aliyuncs.com}
+  model: ${DASHSCOPE_MODEL:qwen-plus}
+
+# ============================================================
+# 日志配置
+# ============================================================
+logging:
+  level:
+    root: ${LOG_LEVEL_ROOT:INFO}
+    com.example.backend: ${LOG_LEVEL_APP:DEBUG}
+  pattern:
+    console: '%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{50} - %msg%n'
+  charset:
+    console: UTF-8
+    file: UTF-8
+
+# ============================================================
+# Actuator 健康检查配置（Docker 使用）
+# ============================================================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+  health:
+    db:
+      enabled: true
+    redis:
+      enabled: false  # 如果不使用 Redis，设为 false 避免健康检查失败

@@ -143,4 +143,48 @@
 		</plugins>
 	</build>
 
+	<!-- Maven 国内镜像源配置 -->
+	<repositories>
+		<!-- 华为云镜像（速度快，稳定） -->
+		<repository>
+			<id>huaweicloud</id>
+			<name>Huawei Cloud Repository</name>
+			<url>https://mirrors.huaweicloud.com/repository/maven/</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+
+		<!-- 阿里云镜像（备用） -->
+		<repository>
+			<id>aliyunmaven</id>
+			<name>Aliyun Maven Repository</name>
+			<url>https://maven.aliyun.com/repository/public</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+	</repositories>
+
+	<!-- Maven 插件国内镜像源配置 -->
+	<pluginRepositories>
+		<pluginRepository>
+			<id>aliyun-plugin</id>
+			<name>Aliyun Plugin Repository</name>
+			<url>https://maven.aliyun.com/repository/public</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</pluginRepository>
+	</pluginRepositories>
+
 </project>

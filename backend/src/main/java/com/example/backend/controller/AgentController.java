@@ -13,7 +13,9 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 智能体控制器
@@ -62,7 +64,7 @@ public class AgentController {
 
         Agent agent = new Agent();
         BeanUtils.copyProperties(request, agent);
-        agent.setCreatedBy(userId);
+        agent.setUserId(userId);
 
         Agent created = agentService.createAgent(agent);
         return Result.success(created);
@@ -93,11 +95,8 @@ public class AgentController {
      * 获取智能体配置
      */
     @GetMapping("/{id}/config")
-    public Result<AgentConfig> getAgentConfig(@PathVariable Long id) {
-        AgentConfig config = agentService.getAgentConfig(id);
-        if (config == null) {
-            return Result.error("配置不存在");
-        }
+    public Result<List<AgentConfig>> getAgentConfig(@PathVariable Long id) {
+        List<AgentConfig> config = agentService.getAgentConfig(id);
         return Result.success(config);
     }
 
@@ -105,15 +104,54 @@ public class AgentController {
      * 更新智能体配置
      */
     @PutMapping("/{id}/config")
-    public Result<AgentConfig> updateAgentConfig(
+    public Result<String> updateAgentConfig(
             @PathVariable Long id,
-            @RequestBody AgentConfigRequest request) {
+            @RequestBody Map<String, Object> configMap) {
 
-        AgentConfig config = new AgentConfig();
-        BeanUtils.copyProperties(request, config);
+        // 1. 更新 Agent 表中的核心字段
+        Agent agent = agentService.getAgentById(id);
+        if (agent == null) {
+            return Result.error("智能体不存在");
+        }
 
-        AgentConfig updated = agentService.updateAgentConfig(id, config);
-        return Result.success(updated);
+        // 提取核心配置字段更新到 agent 表
+        if (configMap.containsKey("systemPrompt")) {
+            agent.setSystemPrompt((String) configMap.get("systemPrompt"));
+        }
+        if (configMap.containsKey("llmModelId")) {
+            Object modelId = configMap.get("llmModelId");
+            if (modelId != null) {
+                agent.setLlmModelId(modelId instanceof Number ? ((Number) modelId).longValue()
+                        : Long.parseLong(modelId.toString()));
+            }
+        }
+        agentService.updateAgent(id, agent);
+
+        // 2. 更新扩展配置到 agent_config 表（key-value 结构）
+        Map<String, Object> extConfigMap = new HashMap<>();
+
+        // 移除核心字段，只保留扩展配置
+        configMap.remove("systemPrompt");
+        configMap.remove("llmModelId");
+
+        // 转换布尔值为字符串，转换数组为 JSON
+        configMap.forEach((key, value) -> {
+            if (value instanceof Boolean) {
+                extConfigMap.put(key, value.toString());
+            } else if (value instanceof List) {
+                try {
+                    extConfigMap.put(key, new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(value));
+                } catch (Exception e) {
+                    extConfigMap.put(key, value.toString());
+                }
+            } else {
+                extConfigMap.put(key, value);
+            }
+        });
+
+        agentService.updateAgentConfigBatch(id, extConfigMap);
+
+        return Result.success("配置更新成功");
     }
 
     /**

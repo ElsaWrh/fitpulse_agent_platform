@@ -12,33 +12,24 @@
         <span class="logo-text" v-show="!isCollapsed">FitPulse</span>
       </div>
 
-      <!-- 导航菜单 -->
+      <!-- 动态导航菜单 -->
       <el-menu
         :default-active="activeMenu"
         router
         class="sidebar-menu"
         :collapse="isCollapsed"
       >
-        <el-menu-item index="/">
-          <el-icon><HomeFilled /></el-icon>
-          <template #title>首页</template>
-        </el-menu-item>
-        <el-menu-item index="/health">
-          <el-icon><Document /></el-icon>
-          <template #title>健康档案</template>
-        </el-menu-item>
-        <el-menu-item index="/agents">
-          <el-icon><Avatar /></el-icon>
-          <template #title>智能体</template>
-        </el-menu-item>
-        <el-menu-item index="/knowledge">
-          <el-icon><Reading /></el-icon>
-          <template #title>知识库</template>
-        </el-menu-item>
-        <el-menu-item index="/profile">
-          <el-icon><User /></el-icon>
-          <template #title>个人设置</template>
-        </el-menu-item>
+        <!-- 动态渲染菜单 -->
+        <template v-for="menu in visibleMenus" :key="menu.id">
+          <el-menu-item 
+            :index="menu.path"
+          >
+            <el-icon>
+              <component :is="getIconComponent(menu.icon)" />
+            </el-icon>
+            <template #title>{{ menu.menuName }}</template>
+          </el-menu-item>
+        </template>
       </el-menu>
 
       <!-- 底部折叠按钮 -->
@@ -94,7 +85,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { ElMessageBox } from 'element-plus'
@@ -108,7 +99,8 @@ import {
   Expand,
   Fold,
   Avatar,
-  Reading
+  Reading,
+  Setting
 } from '@element-plus/icons-vue'
 
 const router = useRouter()
@@ -118,13 +110,40 @@ const userStore = useUserStore()
 const isCollapsed = ref(false)
 const activeMenu = computed(() => route.path)
 
+// 获取可见的菜单（只显示一级菜单，过滤掉按钮类型）
+const visibleMenus = computed(() => {
+  const filtered = userStore.menus.filter(menu => menu.parentId === 0 && menu.menuType === 'MENU')
+  console.log('=== 菜单调试信息 ===')
+  console.log('总菜单数:', userStore.menus.length)
+  console.log('所有菜单:', userStore.menus)
+  console.log('可见菜单数:', filtered.length)
+  console.log('可见菜单:', filtered)
+  return filtered
+})
+
+// 图标映射
+const iconMap = {
+  'HomeFilled': HomeFilled,
+  'Document': Document,
+  'Avatar': Avatar,
+  'Reading': Reading,
+  'User': User,
+  'Setting': Setting
+}
+
+// 获取图标组件
+const getIconComponent = (iconName) => {
+  return iconMap[iconName] || Document
+}
+
 const pageTitle = computed(() => {
   const titles = {
     '/': '首页',
     '/health': '健康档案',
     '/agents': '智能体中心',
     '/knowledge': '知识库',
-    '/profile': '个人设置'
+    '/profile': '个人设置',
+    '/admin': '系统管理'
   }
   // 智能体编辑页面特殊处理
   if (route.path.startsWith('/agents/')) {
@@ -135,6 +154,13 @@ const pageTitle = computed(() => {
     return 'AI 助手'
   }
   return titles[route.path] || 'FitPulse'
+})
+
+// 加载菜单和权限
+onMounted(async () => {
+  if (userStore.menus.length === 0) {
+    await userStore.loadMenusAndPermissions()
+  }
 })
 
 const handleCommand = async (command) => {
